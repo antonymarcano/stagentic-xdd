@@ -48,7 +48,7 @@ class TestFakeAgent:
         )
 
     class TestRunsScript:
-        def test_named_task_script_should_run_in_the_working_directory(self, tasks_root, working_dir, create_test_task_with):
+        def test_should_run_the_named_task(self, tasks_root, working_dir, create_test_task_with):
             task_name = "another-task"
             sentinel_file = "sentinel.txt"
             create_test_task_with(script=f"touch {sentinel_file}\n", name=task_name)
@@ -62,7 +62,7 @@ class TestFakeAgent:
             )
 
     class TestReturnsTranscript:
-        def test_transcript_should_be_returned_wrapped_in_success_for_now(self, tasks_root, working_dir, create_test_task_with):
+        def test_should_be_wrapped_in_success(self, tasks_root, working_dir, create_test_task_with):
             create_test_task_with(script="true\n")
 
             agent = FakeAgent(tasks_root=tasks_root)
