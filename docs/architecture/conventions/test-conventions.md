@@ -20,7 +20,7 @@ A **whole-story test** pins *everything the subject does* — such as every call
 
 **The whole-story test shows the subject's distinguishing outcome.** When the subject's purpose is to dispatch a call to a collaborator (e.g. `ClaudeSession.run`), the whole-story shows that call going through. When the subject's purpose is to raise — to assert, to signal a failure — the whole-story shows it raising, because without the raise the test stops short of what the subject *does*.
 
-**Shape:** pin the composed collaborator interaction exactly via `==` / `assert_called_once_with` (see *Pin exact composed output once via `==`*); slots whose check isn't plain `==` carry a matcher via `matching(...)` (see *Assertion vocabulary*). One example per property is enough in the whole-story itself — the second example for each property comes from a sibling per-property test (see companion rule below).
+**Shape:** pin the composed collaborator interaction exactly via `==` / `assert_called_once_with` (see *Pin exact composed output once via `==`*); slots whose check isn't plain `==` carry a matcher via `matching(...)` (see *Assertion vocabulary*). One example per property is enough in the whole-story test itself — the second example for each property comes from a sibling per-property test (see companion rule below).
 
 **Position:** the test illustrating the scope's *primary behaviour* leads its containing class — the behaviour a reader most needs to see first to grasp what the subject is for. The primary outcome class leads, the secondary outcome follows. Remaining per-property tests (that do not change the outcome) follow in execution-flow order (*Test order follows the production code's execution flow*).
 
@@ -29,6 +29,26 @@ Outcome and phase groupings can combine: outcome classes (`TestPasses`, `TestFai
 **Companion rule for per-property tests:** when a whole-story test exists, per-property tests for value-flow properties may collapse from parametrised (≥2 cases) to a single example — provided that example uses a value *different* from the whole-story's. The pair (per-property + whole-story) supplies the ≥2 examples needed for mutation coverage (see *Parametrise value-flow tests over ≥2 cases with `ids`*). If the values match, the second example evaporates.
 
 **Don't fragment into one test per fact.** When a whole-story test exists, per-property tests don't earn their place by virtue of being possible — they earn their place when value, presence, or absence alters behaviour (see *Pin exact composed output once via `==`*). Fragmenting a whole-story test into one test per fact loses the integrated narrative the whole-story conveys.
+
+## Test names read in context of their holding class
+
+A test method's name reads together with the class that holds it, as `class › method`. The method drops the words its holding class already carries and uses the implicit-subject `test_should_…` form, letting the class supply the subject. This refines *Test naming* (above): the subject the holding class names leaves the method name. It applies to every test, whichever class holds it — the top-level subject class or an inner phase/outcome class.
+
+How much the method name carries depends on how much its holding class carries:
+
+- **Under the subject class** (`TestFakeAgent`) the class names only the unit under test, so the method keeps the full behaviour it describes — it just doesn't repeat the unit. The whole-story test `TestFakeAgent › test_should_run_the_task_script_and_make_the_transcript_available` is long because its holding class carries little, not because it is exempt from the rule.
+- **Under a phase or outcome class** (`TestRunsScript`, `TestReturnsTranscript`) the class names a phase or outcome as well, so the method sheds those words too:
+
+```text
+TestRunsScript        › test_should_run_the_named_task
+TestReturnsTranscript › test_should_be_wrapped_in_success
+```
+
+not `test_named_task_script_should_run_in_the_working_directory` (the class already says "script") or `test_transcript_should_be_returned_wrapped_in_success` (the class already says "returns the transcript").
+
+**Keep the word that names what the test uniquely pins; trim only what the holding class or a sibling already covers.** `test_should_run_the_named_task` keeps "the named task" because routing by name is what distinguishes it from the whole-story test; it drops "in the working directory" because the whole-story test already exercises the working directory, so naming it here would foreground a shared property over the distinguishing one.
+
+**Why:** the file and the IDE's test tree both present the method beneath its holding class, so the class name is always in view. Repeating it in the method name adds noise; leaning on it spends the method name's words on what the test actually distinguishes.
 
 ## Per-property test layout: relevant kwargs at the top
 
@@ -141,7 +161,7 @@ When the production code composes a value from inputs, write one assertion that 
 
 **Per-property tests** (separate methods focused on a single property) earn their place when a property's **value, presence, or absence alters behaviour** — e.g. an omitted flag that triggers a different code path. Whole-story tests embody this convention's exact-match pinning — see *Whole-story tests*.
 
-**Why:** the exact-match documents the shape — prefix, separator, ordering, glue — that a reader would otherwise have to infer from the production source, and catches accidental drift in the composition. Per-property tests make behavioural facts explicit that a whole-story exact-match alone wouldn't surface.
+**Why:** the exact-match documents the shape — prefix, separator, ordering, glue — that a reader would otherwise have to infer from the production source, and catches accidental drift in the composition. Per-property tests make behavioural facts explicit that a whole-story test's exact-match alone wouldn't surface.
 
 ## MagicMock interrogation forms
 
