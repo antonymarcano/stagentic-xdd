@@ -2,9 +2,9 @@
 
 Conventions for tests in this repo — follow them when writing or changing tests. Each rule's **Why** explains what it guards, so it isn't naively "simplified" away.
 
-## Test naming: `test_<subject>_should_<behaviour>`
+## Test naming: `test_should_<behaviour>`
 
-Test methods are named `test_<subject>_should_<behaviour>` (e.g. `test_evaluation_should_not_raise_when_all_characteristics_pass`, `test_failure_message_should_list_every_failed_row`). The subject is the thing whose behaviour is being asserted (the evaluation, the failure message, the path); the behaviour describes what the subject does or does not do.
+Test methods are named `test_should_<behaviour>` — a behavioural claim read together with the class that holds it, which names the subject (see *Test names read in context of their holding class*). The behaviour describes what the subject does or does not do; the subject itself stays out of the method name. For example `TestCritic › test_should_raise_when_the_scorecard_is_empty` reads as "the critic should raise when the scorecard is empty", and `TestSuccess › test_should_carry_its_value` as "a success should carry its value".
 
 **Why:** the test name reads as a behavioural claim, not as a description of the method called or the mechanism. A reader scanning the file sees what the code *does*, not which method is invoked.
 
