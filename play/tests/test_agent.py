@@ -55,7 +55,7 @@ class TestAgent:
         )
 
     class TestCallsSession:
-        def test_prompt_should_be_read_from_the_named_task(self, tasks_root, create_test_task_with, dummy, session_spy):
+        def test_should_read_prompt_from_the_named_task(self, tasks_root, create_test_task_with, dummy, session_spy):
             task_name = "another-task"
             task_prompt = "the prompt"
             create_test_task_with(prompt=task_prompt, name=task_name)
@@ -73,7 +73,7 @@ class TestAgent:
                 working_dir=ANY, transcript_path=ANY,
             )
 
-        def test_working_dir_should_be_passed_to_session(self, tasks_root, create_test_task_with, session_spy):
+        def test_should_pass_working_dir_to_session(self, tasks_root, create_test_task_with, session_spy):
             create_test_task_with("dummy prompt")
 
             Agent(
@@ -89,7 +89,7 @@ class TestAgent:
                 prompt=ANY, transcript_path=ANY,
             )
 
-        def test_transcript_path_should_be_inside_working_dir(self, tasks_root, create_test_task_with, session_spy):
+        def test_should_derive_transcript_path_from_working_dir(self, tasks_root, create_test_task_with, session_spy):
             create_test_task_with("dummy prompt")
 
             Agent(
@@ -106,7 +106,7 @@ class TestAgent:
             )
 
     class TestReturnsTranscript:
-        def test_transcript_should_be_returned_wrapped_in_success(self, tasks_root, create_test_task_with, session_spy):
+        def test_should_be_wrapped_in_success(self, tasks_root, create_test_task_with, session_spy):
             create_test_task_with("dummy prompt")
             working_dir = Path("/other/dir")
 

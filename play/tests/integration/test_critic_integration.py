@@ -33,7 +33,7 @@ class TestCriticIntegration:
             home=Path.home(),
         )
 
-    def test_evaluation_should_fail_when_a_characteristic_is_not_met(self, session, tmp_path):
+    def test_should_fail_when_a_characteristic_is_not_met(self, session, tmp_path):
         transcript = tmp_path / "transcript.md"
         transcript.write_text(_TRANSCRIPT_PYTEST_RAN_AND_FAILED)
 
@@ -54,7 +54,7 @@ class TestCriticIntegration:
             does_not(has_item("Transcript shows the agent ran pytest")),
         ))
 
-    def test_evaluation_should_pass_when_all_characteristics_are_met(self, session, tmp_path):
+    def test_should_pass_when_all_characteristics_are_met(self, session, tmp_path):
         transcript = tmp_path / "transcript.md"
         transcript.write_text(_TRANSCRIPT_PYTEST_RAN_AND_PASSED)
 
