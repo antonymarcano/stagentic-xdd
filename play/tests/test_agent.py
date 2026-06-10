@@ -122,7 +122,7 @@ class TestAgent:
             )
 
     class TestReturnsTranscript:
-        def test_transcript_should_be_returned_wrapped_in_success_for_now(self, tasks_root, create_test_task_with, session_spy):
+        def test_transcript_should_be_returned_wrapped_in_success(self, tasks_root, create_test_task_with, session_spy):
             create_test_task_with("dummy prompt")
             working_dir = Path("/other/dir")
 
