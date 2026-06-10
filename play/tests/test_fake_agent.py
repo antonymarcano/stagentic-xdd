@@ -47,31 +47,34 @@ class TestFakeAgent:
             result, equal_to(Success(working_dir / "transcript.md"))
         )
 
-    def test_named_task_script_should_run_in_the_working_directory(self, tasks_root, working_dir, create_test_task_with):
-        task_name = "another-task"
-        sentinel_file = "sentinel.txt"
-        create_test_task_with(script=f"touch {sentinel_file}\n", name=task_name)
+    class TestRunsScript:
+        def test_named_task_script_should_run_in_the_working_directory(self, tasks_root, working_dir, create_test_task_with):
+            task_name = "another-task"
+            sentinel_file = "sentinel.txt"
+            create_test_task_with(script=f"touch {sentinel_file}\n", name=task_name)
 
-        FakeAgent(tasks_root=tasks_root).perform(
-            task=task_name, working_dir=working_dir,
-        )
+            FakeAgent(tasks_root=tasks_root).perform(
+                task=task_name, working_dir=working_dir,
+            )
 
-        assert_that(
-            (working_dir / sentinel_file).exists(), equal_to(True)
-        )
+            assert_that(
+                (working_dir / sentinel_file).exists(), equal_to(True)
+            )
 
-    def test_transcript_should_be_returned_wrapped_in_success_for_now(self, tasks_root, working_dir, create_test_task_with):
-        create_test_task_with(script="true\n")
+    class TestReturnsTranscript:
+        def test_transcript_should_be_returned_wrapped_in_success_for_now(self, tasks_root, working_dir, create_test_task_with):
+            create_test_task_with(script="true\n")
 
-        agent = FakeAgent(tasks_root=tasks_root)
-        result = agent.perform(task=_TASK_NAME, working_dir=working_dir)
+            agent = FakeAgent(tasks_root=tasks_root)
+            result = agent.perform(task=_TASK_NAME, working_dir=working_dir)
 
-        assert_that(result, equal_to(Success(working_dir / "transcript.md")))
+            assert_that(result, equal_to(Success(working_dir / "transcript.md")))
 
-    def test_should_raise_when_the_task_script_fails(self, tasks_root, working_dir, create_test_task_with):
-        create_test_task_with(script="exit 1\n")
+    class TestErrors:
+        def test_should_raise_when_the_task_script_fails(self, tasks_root, working_dir, create_test_task_with):
+            create_test_task_with(script="exit 1\n")
 
-        agent = FakeAgent(tasks_root=tasks_root)
+            agent = FakeAgent(tasks_root=tasks_root)
 
-        with pytest.raises(subprocess.CalledProcessError):
-            agent.perform(task=_TASK_NAME, working_dir=working_dir)
+            with pytest.raises(subprocess.CalledProcessError):
+                agent.perform(task=_TASK_NAME, working_dir=working_dir)
