@@ -55,22 +55,6 @@ class TestAgent:
         )
 
     class TestCallsSession:
-        def test_prompt_should_be_read_from_task_file(self, tasks_root, create_test_task_with, dummy, session_spy):
-            task_prompt = "do the other thing"
-            create_test_task_with(task_prompt)
-
-            Agent(
-                tasks_root=tasks_root,
-                session=session_spy,
-            ).perform(
-                task=_TASK_NAME, working_dir=dummy,
-            )
-
-            session_spy.run.assert_called_once_with(
-                prompt=task_prompt,
-                working_dir=ANY, transcript_path=ANY,
-            )
-
         def test_prompt_should_be_read_from_the_named_task(self, tasks_root, create_test_task_with, dummy, session_spy):
             task_name = "another-task"
             task_prompt = "the prompt"
