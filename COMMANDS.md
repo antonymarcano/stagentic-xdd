@@ -114,9 +114,16 @@ uv run --directory play mutmut results
 uv run --directory play mutmut show <mutant>
 ```
 
-After a test-only change, remove `mutants/` before re-running — mutmut caches by
-mutated source and otherwise replays stale results:
+### Clean up after the run
+
+`mutmut` has no cleanup of its own (3.6.0) — it leaves a `mutants/` tree under
+`play/`, a verbatim copy of `src/` and the test suite where it also stores its
+results. Once the run is complete and any survivors inspected, remove it:
 
 ```
 rm -rf play/mutants
 ```
+
+Removing it when done keeps the next run from replaying stale cached results,
+and stops IDE duplicate-code inspections flagging the copied test files as
+duplicates of the originals.

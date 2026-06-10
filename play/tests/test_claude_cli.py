@@ -1,87 +1,105 @@
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 import pytest
+from hamcrest import has_item, has_items, is_not
+from matchers import matching
 from test_doubles.stubbed_subprocess import StubbedSubprocess
 
 from claude_cli import ClaudeCli
 
 
 class TestClaudeCli:
-    def test_submits_full_command_to_subprocess(self, tmp_path):
-        subprocess = MagicMock(side_effect=StubbedSubprocess(returncode=0))
+    class TestSucceeds:
+        def test_should_submit_the_full_command_and_return_stdout(self, tmp_path):
+            subprocess = MagicMock(
+                side_effect=StubbedSubprocess(
+                    returncode=0, stdout="run complete\n"
+                )
+            )
 
-        ClaudeCli(subprocess=subprocess)(
-            "evaluate this",
-            workspace=tmp_path,
-            session_id="abc-123"
-        )
+            result = ClaudeCli(subprocess=subprocess)(
+                "evaluate this",
+                workspace=tmp_path,
+                session_id="abc-123"
+            )
 
-        subprocess.assert_called_once_with(
-            ["claude", "--permission-mode", "acceptEdits",
-             "--session-id", "abc-123",
-             "--add-dir", str(tmp_path),
-             "-p", "evaluate this"],
-            cwd=tmp_path,
-            capture_output=True,
-            text=True,
-        )
+            subprocess.assert_called_once_with(
+                ["claude", "--permission-mode", "acceptEdits",
+                 "--session-id", "abc-123",
+                 "--add-dir", str(tmp_path),
+                 "-p", "evaluate this"],
+                cwd=tmp_path,
+                capture_output=True,
+                text=True,
+            )
+            assert result == "run complete\n"
 
-    def test_returns_stdout_when_subprocess_succeeds(self):
-        successful = StubbedSubprocess(returncode=0, stdout="PASS\n")
+        def test_should_return_stdout(self):
+            successful = StubbedSubprocess(
+                returncode=0, stdout="PASS\n"
+            )
 
-        result = ClaudeCli(subprocess=successful)("any prompt")
+            result = ClaudeCli(subprocess=successful)("any prompt")
 
-        assert result == "PASS\n"
+            assert result == "PASS\n"
 
-    def test_omits_session_id_from_command_when_not_provided(self):
-        subprocess = MagicMock(side_effect=StubbedSubprocess(returncode=0))
+    class TestBuildsCommand:
+        @pytest.fixture
+        def subprocess_that_succeeds(self):
+            return MagicMock(side_effect=StubbedSubprocess(returncode=0))
 
-        ClaudeCli(subprocess=subprocess)("any prompt")
+        def test_should_include_the_prompt(self, subprocess_that_succeeds):
+            ClaudeCli(subprocess=subprocess_that_succeeds)("another prompt")
 
-        subprocess.assert_called_once()
-        cmd = subprocess.call_args.args[0]
-        assert "--session-id" not in cmd
+            subprocess_that_succeeds.assert_called_once_with(
+                matching(has_item("another prompt")),
+                cwd=ANY, capture_output=ANY, text=ANY,
+            )
 
-    def test_omits_workspace_from_command_when_not_provided(self):
-        subprocess = MagicMock(side_effect=StubbedSubprocess(returncode=0))
+        def test_should_include_the_session_id(self, subprocess_that_succeeds):
+            ClaudeCli(subprocess=subprocess_that_succeeds)(
+                "any prompt", session_id="xyz-789"
+            )
 
-        ClaudeCli(subprocess=subprocess)("any prompt")
+            subprocess_that_succeeds.assert_called_once_with(
+                matching(has_items("--session-id", "xyz-789")),
+                cwd=ANY, capture_output=ANY, text=ANY,
+            )
 
-        subprocess.assert_called_once()
-        cmd = subprocess.call_args.args[0]
-        kwargs = subprocess.call_args.kwargs
-        assert "--add-dir" not in cmd
-        assert kwargs["cwd"] is None
+        def test_should_omit_the_session_id_when_not_provided(self, subprocess_that_succeeds):
+            ClaudeCli(subprocess=subprocess_that_succeeds)("any prompt")
 
-    def test_prompt_should_be_passed_to_subprocess(self):
-        subprocess = MagicMock(side_effect=StubbedSubprocess(returncode=0))
+            subprocess_that_succeeds.assert_called_once_with(
+                matching(is_not(has_item("--session-id"))),
+                cwd=ANY, capture_output=ANY, text=ANY,
+            )
 
-        ClaudeCli(subprocess=subprocess)("another prompt")
+        def test_should_pass_the_workspace_as_add_dir_and_cwd(self, tmp_path, subprocess_that_succeeds):
+            ClaudeCli(subprocess=subprocess_that_succeeds)(
+                "any prompt",
+                workspace=tmp_path
+            )
 
-        cmd = subprocess.call_args.args[0]
-        assert "another prompt" in cmd
+            subprocess_that_succeeds.assert_called_once_with(
+                matching(has_items("--add-dir", str(tmp_path))),
+                cwd=tmp_path,
+                capture_output=ANY, text=ANY,
+            )
 
-    def test_workspace_should_be_passed_as_add_dir_and_cwd(self, tmp_path):
-        subprocess = MagicMock(side_effect=StubbedSubprocess(returncode=0))
+        def test_should_omit_the_workspace_when_not_provided(self, subprocess_that_succeeds):
+            ClaudeCli(subprocess=subprocess_that_succeeds)("any prompt")
 
-        ClaudeCli(subprocess=subprocess)("any prompt", workspace=tmp_path)
+            subprocess_that_succeeds.assert_called_once_with(
+                matching(is_not(has_item("--add-dir"))),
+                cwd=None,
+                capture_output=ANY, text=ANY,
+            )
 
-        cmd = subprocess.call_args.args[0]
-        assert "--add-dir" in cmd
-        assert str(tmp_path) in cmd
-        assert subprocess.call_args.kwargs["cwd"] == tmp_path
+    class TestErrors:
+        def test_should_raise_RuntimeError_when_subprocess_fails(self):
+            failing = StubbedSubprocess(
+                returncode=1, stderr="something went wrong"
+            )
 
-    def test_session_id_should_be_passed_to_subprocess(self):
-        subprocess = MagicMock(side_effect=StubbedSubprocess(returncode=0))
-
-        ClaudeCli(subprocess=subprocess)("any prompt", session_id="xyz-789")
-
-        cmd = subprocess.call_args.args[0]
-        assert "--session-id" in cmd
-        assert "xyz-789" in cmd
-
-    def test_raises_RuntimeError_when_subprocess_fails(self):
-        failing = StubbedSubprocess(returncode=1, stderr="something went wrong")
-
-        with pytest.raises(RuntimeError):
-            ClaudeCli(subprocess=failing)("any prompt")
+            with pytest.raises(RuntimeError, match="something went wrong"):
+                ClaudeCli(subprocess=failing)("any prompt")

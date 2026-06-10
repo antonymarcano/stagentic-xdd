@@ -38,7 +38,8 @@ This is the green-step discipline. While a `source_paths` file is in flight,
 reaching green is not yet the cue to propose a commit: the green step is
 **focused mutmut on the file → dial back any survivor to the most naive code
 that still passes, re-running until clean → run the test suite the change's
-scope calls for → full-set mutmut gate → propose the commit**. Don't propose a
+scope calls for → full-set mutmut gate → remove the `mutants/` tree → propose
+the commit**. Don't propose a
 commit straight off a green when the file you're developing is a mutation
 target.
 
