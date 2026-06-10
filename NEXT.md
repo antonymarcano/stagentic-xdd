@@ -42,7 +42,7 @@ don't bury NEXT.md.
 - [x] `agent.py` (and `tests/test_agent.py`)
 - [x] `result.py` (and `tests/test_result.py`)
 - [x] `result_matchers.py` (and `tests/test_result_matchers.py`)
-- [ ] `fake_agent.py` (and `tests/test_fake_agent.py`)
+- [x] `fake_agent.py` (and `tests/test_fake_agent.py`)
 - [ ] `claude_cli.py` (and `tests/test_claude_cli.py`, `tests/contract/test_claude_cli.py`)
 - [ ] `claude_session.py` (and `tests/test_claude_session.py`)
 - [ ] `auditor.py` (and `tests/test_auditor.py`)
