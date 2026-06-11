@@ -29,7 +29,7 @@ class TestAuditor:
 
             Auditor().evaluate(
                 evidence_source=transcript,
-                working_dir=working_dir,
+                workspace=working_dir,
                 should=[
                     {"characteristic": "captures input",
                      "verify": verify,
@@ -54,7 +54,7 @@ class TestAuditor:
                      "verify": verify,
                      "failure": "n/a"},
                 ],
-                working_dir=dummy_path,
+                workspace=dummy_path,
             )
 
             verify.assert_called_once_with(evidence_text, ANY)
@@ -64,7 +64,7 @@ class TestAuditor:
             verify = MagicMock(return_value=True)
 
             Auditor().evaluate(
-                working_dir=working_dir,
+                workspace=working_dir,
                 should=[
                     {"characteristic": "captures input",
                      "verify": verify,
@@ -82,7 +82,7 @@ class TestAuditor:
                      "verify": lambda transcript, working_dir: True,
                      "failure": "alpha reason"},
                 ],
-                evidence_source=evidence_source, working_dir=dummy_path,
+                evidence_source=evidence_source, workspace=dummy_path,
             )
 
             assert_that(result, equal_to(Success(ScorecardResults(
@@ -97,7 +97,7 @@ class TestAuditor:
                      "verify": lambda transcript, working_dir: True,
                      "failure": "beta reason"},
                 ],
-                evidence_source=evidence_source, working_dir=dummy_path,
+                evidence_source=evidence_source, workspace=dummy_path,
             )
 
             assert_that(result, equal_to(Success(ScorecardResults(
@@ -119,7 +119,7 @@ class TestAuditor:
                      "verify": lambda transcript, working_dir: False,
                      "failure": "third failure"},
                 ],
-                evidence_source=evidence_source, working_dir=dummy_path,
+                evidence_source=evidence_source, workspace=dummy_path,
             )
 
             assert_that(result, equal_to(Failure([
@@ -134,7 +134,7 @@ class TestAuditor:
                      "verify": lambda transcript, working_dir: False,
                      "failure": "my failure message"},
                 ],
-                evidence_source=evidence_source, working_dir=dummy_path,
+                evidence_source=evidence_source, workspace=dummy_path,
             )
 
             assert_that(result, equal_to(Failure([
@@ -146,7 +146,7 @@ class TestAuditor:
             with pytest.raises(ValueError) as excinfo:
                 Auditor().evaluate(
                     evidence_source=dummy_path,
-                    working_dir=dummy_path,
+                    workspace=dummy_path,
                     should=[],
                 )
 

@@ -14,17 +14,17 @@ class Critic(Inspector):
     def evaluate(
             self, *,
             evidence_source: Path,
-            working_dir: Path,
+            workspace: Path,
             should: list[dict],
     ) -> Result[ScorecardResults, list[dict[str, str]]]:
         if not should: raise ValueError("scorecard must not be empty")
 
         agent_response = self._session.run(
             prompt=_prompt_for(
-                evidence_source, working_dir, should
+                evidence_source, workspace, should
             ),
-            working_dir=working_dir,
-            transcript_path=working_dir / "critique.md",
+            working_dir=workspace,
+            transcript_path=workspace / "critique.md",
         )
         scorecard = ScorecardResults.from_(
             maybe_results=candidate_scorecard_from(agent_response),

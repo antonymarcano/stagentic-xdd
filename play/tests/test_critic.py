@@ -34,7 +34,7 @@ class TestCritic:
 
             result = Critic(session=session_that_fails).evaluate(
                 evidence_source=evidence_source,
-                working_dir=working_dir,
+                workspace=working_dir,
                 should=[{"characteristic": "alpha", "failure": "alpha reason"}],
             )
 
@@ -60,7 +60,7 @@ class TestCritic:
 
             result = Critic(session=session).evaluate(
                 evidence_source=evidence_source,
-                working_dir=working_dir,
+                workspace=working_dir,
                 should=[
                     {"characteristic": "alpha", "failure": "alpha reason"},
                     {"characteristic": "beta", "failure": "beta reason"},
@@ -78,7 +78,7 @@ class TestCritic:
 
             result = Critic(session=session).evaluate(
                 evidence_source=evidence_source,
-                working_dir=working_dir,
+                workspace=working_dir,
                 should=[{"characteristic": "alpha", "failure": "alpha reason"}],
             )
 
@@ -93,7 +93,7 @@ class TestCritic:
 
             Critic(session=session_that_passes).evaluate(
                 evidence_source=evidence_source,
-                working_dir=working_dir, should=one_characteristic_scorecard,
+                workspace=working_dir, should=one_characteristic_scorecard,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -107,7 +107,7 @@ class TestCritic:
             working_dir = Path("/workspace/embedded-in-prompt")
 
             Critic(session=session_that_passes).evaluate(
-                working_dir=working_dir,
+                workspace=working_dir,
                 evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
@@ -130,7 +130,7 @@ class TestCritic:
                     {"characteristic": "first thing", "failure": "n/a"},
                     {"characteristic": "second thing", "failure": "n/a"},
                 ],
-                evidence_source=evidence_source, working_dir=working_dir,
+                evidence_source=evidence_source, workspace=working_dir,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -145,7 +145,7 @@ class TestCritic:
             working_dir = Path("/workspace/passed-to-session")
 
             Critic(session=session_that_passes).evaluate(
-                working_dir=working_dir,
+                workspace=working_dir,
                 evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
@@ -158,7 +158,7 @@ class TestCritic:
             working_dir = Path("/workspace/derives-critique-path")
 
             Critic(session=session_that_passes).evaluate(
-                working_dir=working_dir,
+                workspace=working_dir,
                 evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
@@ -172,7 +172,7 @@ class TestCritic:
             with pytest.raises(ValueError) as excinfo:
                 Critic(session=dummy).evaluate(
                     should=[],
-                    evidence_source=evidence_source, working_dir=working_dir,
+                    evidence_source=evidence_source, workspace=working_dir,
                 )
 
             assert_that(str(excinfo.value), equal_to(

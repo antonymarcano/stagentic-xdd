@@ -1,7 +1,7 @@
 from unittest.mock import ANY, MagicMock
 
 import pytest
-from hamcrest import has_item, has_items
+from hamcrest import assert_that, equal_to, has_item, has_items
 from matchers import matching
 from test_doubles.stubbed_subprocess import StubbedSubprocess
 
@@ -33,7 +33,7 @@ class TestClaudeCli:
                 capture_output=True,
                 text=True,
             )
-            assert result == "run complete\n"
+            assert_that(result, equal_to("run complete\n"))
 
         def test_should_return_stdout(self, tmp_path):
             successful = StubbedSubprocess(
@@ -46,7 +46,7 @@ class TestClaudeCli:
                 session_id="any session id"
             )
 
-            assert result == "PASS\n"
+            assert_that(result, equal_to("PASS\n"))
 
     class TestBuildsCommand:
         @pytest.fixture

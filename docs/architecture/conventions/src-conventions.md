@@ -38,11 +38,13 @@ When the design intent overrides an IDE warning (e.g. `Auditor.evaluate` reads a
 
 **Trigger to revisit:** if the symmetry argument no longer holds (e.g. `Critic` itself becomes static), revisit the suppression.
 
-## Private functions follow call order from the public method
+## Private functions follow the order their calls appear
 
-Private module-level functions in a file are defined in the order they are called from the public method. Depth-first: each helper appears, then its directly-called internal helpers right after it. Constants used only by one helper sit just before that helper.
+Private module-level functions in a file are defined in the order their calls *appear* in the public method, reading top-to-bottom and left-to-right. Depth-first: each helper appears, then the helpers whose calls appear in its body right after it. Constants used only by one helper sit just before that helper.
 
-**Why:** reading the file top-to-bottom matches the execution flow. A reader doesn't have to jump around to follow a single call's progression. When a helper is reused (e.g. `_raise_if` called from multiple sites), its position is fixed by its *first* call from the public method.
+For a nested call such as `_entries_from(_failures_from(...))`, the outer call is read first, so `_entries_from` is defined before `_failures_from` — even though `_failures_from` *executes* first as the inner argument. Order by what a reader meets first, not by execution order.
+
+**Why:** a reader encounters the definitions in the same order they encounter the calls reading the public method, so following the code doesn't require jumping around. When a helper is reused (called from multiple sites), its position is fixed by its *first* appearance.
 
 ## Orchestrator methods read at a single level of abstraction
 

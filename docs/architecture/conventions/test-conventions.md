@@ -141,6 +141,8 @@ Tests should cover behaviour the code *chooses*, not behaviour Python provides f
 
 **Why:** by that logic every signature would need a test for its required-vs-optional status and every type hint would need a test for its enforcement. The tests would balloon to document Python rather than the code. Runtime guards the code *adds* (e.g. `if not should: raise ValueError`) DO warrant tests — those are choices.
 
+**Exception — pinning an arg deliberately made required.** When changing a parameter from optional to mandatory is itself the work, a single test asserting that omitting it now raises `TypeError` is warranted: it makes the decision explicit and checked, so a later silent re-loosening (a re-added `= None`) fails a named test rather than slipping through. This stays narrow — it's for an arg whose optionality was a live decision, not a licence to test every required parameter's binding.
+
 ## Assertion vocabulary: PyHamcrest matchers
 
 Assertions use PyHamcrest matchers (ADR 0011), in two places:

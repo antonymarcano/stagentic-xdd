@@ -9,6 +9,6 @@ class Inspector(Protocol):
     def evaluate(
             self, *,
             evidence_source: Path,
-            working_dir: Path,
+            workspace: Path,
             should: list[dict],
     ) -> Result[ScorecardResults, list[dict[str, str]]]: ...
