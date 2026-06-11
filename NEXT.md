@@ -4,6 +4,55 @@
 > immediate next step and is rewritten as work lands; a commit that
 > points at NEXT.md rots the moment the file changes.
 
+## 0. Working approach
+
+One change at a time: apply it, run the test(s) the change's scope calls
+for, then propose a commit — behavioural and structural changes kept in
+separate commits (see
+[`docs/working-practices.md`](docs/working-practices.md)).
+
+### Reviewing a test file
+
+Review the file through each lens below in turn, confirming each one by
+one — even where it needs no change. Most lenses are the conventions in
+[`docs/architecture/conventions/test-conventions.md`](docs/architecture/conventions/test-conventions.md);
+the last two are inferred from the reviewed exemplars.
+
+- Test naming `test_should_<behaviour>`
+- Test order follows the production code's execution flow
+- Whole-story tests
+- Test names read in context of their holding class
+- Per-property test layout: relevant kwargs at the top
+- Explicit no-raise via `does_not_raise`
+- Write parametrise rows with `case`
+- Parametrise value-flow tests over ≥2 cases with `ids`
+- Don't test Python's own enforcement
+- Assertion vocabulary: PyHamcrest matchers
+- Pin exact composed output once via `==`
+- MagicMock interrogation forms
+- `spec=Class` vs `spec=Class()` for directly-callable spies
+- Stub callable → lambda; spy callable → `MagicMock`
+- Marker placement: lane marker on the holding class, not the method (inferred)
+- Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
+
+### Reviewing a src file
+
+As above, but through these lenses. Most are the conventions in
+[`docs/architecture/conventions/src-conventions.md`](docs/architecture/conventions/src-conventions.md);
+the last two are inferred from the reviewed exemplars.
+
+- Type hints on every public method parameter (avoid `Any`)
+- Required vs optional: no `| None = None` defaults for test convenience
+- Runtime guards for semantic preconditions the type system can't express
+- Helper-function parameter order mirrors the call it makes
+- IDE warning suppression with an inline rationale comment
+- Private functions follow the order their calls appear
+- Orchestrator methods read at a single level of abstraction
+- Naming-suffix vocabulary for private helpers
+- Kwarg-style helpers compose into prose at the call site
+- Public methods take keyword-only args (`*` separator) (inferred)
+- Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
+
 ## 1. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
@@ -43,10 +92,7 @@ don't bury NEXT.md.
 - [x] `result.py` (and `tests/test_result.py`)
 - [x] `result_matchers.py` (and `tests/test_result_matchers.py`)
 - [x] `fake_agent.py` (and `tests/test_fake_agent.py`)
-- [x] `claude_cli.py`
-  - [x] `tests/test_claude_cli.py`
-  - [x] `claude_cli.py` (source — src-conventions)
-  - [ ] `tests/contract/test_claude_cli.py`
+- [x] `claude_cli.py` (and `tests/test_claude_cli.py`, `tests/contract/test_claude_cli.py`)
 - [ ] `claude_session.py` (and `tests/test_claude_session.py`)
 - [ ] `auditor.py` (and `tests/test_auditor.py`)
 - [ ] `scorecard_results.py` (and `tests/test_scorecard_results.py`)
