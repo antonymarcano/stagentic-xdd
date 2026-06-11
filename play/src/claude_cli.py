@@ -1,36 +1,69 @@
-import subprocess as _subprocess_module
+import subprocess
 from collections.abc import Callable
+from pathlib import Path
 
 
 class ClaudeCli:
-    def __init__(self, subprocess: Callable = _subprocess_module.run):
-        self._subprocess = subprocess
+    def __init__(self, runner: Callable = subprocess.run):
+        self._runner = runner
 
-    def __call__(self, prompt, *, workspace=None, session_id=None):
-        result = _submit_to(self._subprocess, prompt, workspace, session_id)
-        if _is_not_successful(result):
-            raise RuntimeError(result.stderr)
+    def __call__(
+            self, prompt: str, *,
+            workspace: Path,
+            session_id: str,
+    ) -> str:
+        result = _submit_to(
+            self._runner,
+            prompt,
+            workspace,
+            session_id
+        )
+        _raise_if(
+            _is_not_successful(result),
+            raising_error=RuntimeError,
+            with_message=result.stderr,
+        )
         return result.stdout
 
 
-def _submit_to(subprocess, prompt, workspace, session_id):
-    return subprocess(
-        _command(prompt, workspace, session_id),
+def _submit_to(
+        runner: Callable,
+        prompt: str,
+        workspace: Path,
+        session_id: str,
+) -> subprocess.CompletedProcess:
+    return runner(
+        _command(
+            prompt,
+            workspace,
+            session_id
+        ),
         cwd=workspace,
         capture_output=True,
         text=True
     )
 
 
-def _is_not_successful(result) -> bool:
+def _command(
+        prompt: str,
+        workspace: Path,
+        session_id: str
+) -> list[str]:
+    cmd = ["claude", "-p", prompt]
+    cmd += ["--permission-mode", "acceptEdits"]
+    cmd += ["--session-id", session_id]
+    cmd += ["--add-dir", str(workspace)]
+    return cmd
+
+
+def _is_not_successful(result: subprocess.CompletedProcess) -> bool:
     return result.returncode != 0
 
 
-def _command(prompt, workspace=None, session_id=None):
-    cmd = ["claude", "--permission-mode", "acceptEdits"]
-    if session_id is not None:
-        cmd += ["--session-id", session_id]
-    if workspace is not None:
-        cmd += ["--add-dir", str(workspace)]
-    cmd += ["-p", prompt]
-    return cmd
+def _raise_if(
+        condition: bool, *,
+        raising_error: type[Exception],
+        with_message: str,
+) -> None:
+    if condition:
+        raise raising_error(with_message)

@@ -96,10 +96,12 @@ unit lane. See ADR [0010](docs/architecture/decisions/0010-adopt-mutation-testin
 ### Focus one file (during TDD or review)
 
 ```
-uv run --directory play mutmut run "<file>*"
+uv run --directory play mutmut run "<module>*"
 ```
 
-`<file>` is the module name, e.g. `critic`.
+`<module>` is the bare module name — the prefix mutmut gives its mutant
+names, not a path or filename: no `src/`, no `.py` (e.g. `critic`, never
+`src/critic.py`).
 
 ### Full set (before work is 'done')
 
@@ -107,7 +109,16 @@ uv run --directory play mutmut run "<file>*"
 uv run --directory play mutmut run
 ```
 
-### Inspect survivors
+### Reading the result
+
+The result is the command's **exit code**: `0` means every mutant was
+killed, non-zero means at least one survived. Read that — don't pipe the
+run through `grep`, which can filter out the survivor lines you need and
+risk a false all-clear, and don't run the full set just to `grep` it. Run
+the focused command above for per-file feedback; reserve the full set for
+the regression gate.
+
+Only when the exit code is non-zero, inspect the survivors:
 
 ```
 uv run --directory play mutmut results

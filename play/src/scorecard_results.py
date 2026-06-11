@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from raise_if import raise_if
+from raise_when import raise_when
 
 _REQUIRED_KEYS = ("characteristic", "status")
 
@@ -18,7 +18,7 @@ class ScorecardResults:
             raising_error=ValueError,
         )
 
-        raise_if(
+        raise_when(
             _problems_of([
                 _duplicated(results),
                 _unaccounted_for(should, results),

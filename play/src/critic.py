@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from claude_session import ClaudeSession
+from inspector import Inspector
 from result import Failure, Result, Success
 from scorecard_json_extraction import candidate_scorecard_from
 from scorecard_results import ScorecardResults
 
 
-class Critic:
+class Critic(Inspector):
     def __init__(self, *, session: ClaudeSession):
         self._session = session
 
@@ -14,7 +15,7 @@ class Critic:
             self, *,
             evidence_source: Path,
             working_dir: Path,
-            should: list[dict[str, str]],
+            should: list[dict],
     ) -> Result[ScorecardResults, list[dict[str, str]]]:
         if not should: raise ValueError("scorecard must not be empty")
 

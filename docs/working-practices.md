@@ -63,9 +63,9 @@ writing the new test/code, so any survivor that appears afterwards is
 unambiguously yours to dial back.
 
 **First — focused, on the file you're developing.** After every green, run
-`mutmut run "<module>*"` — `<module>` is the bare module name (e.g. `cases`),
-the prefix mutmut gives its mutant names, *not* a path or filename: no `src/`,
-no `.py` (so `cases`, never `src/cases.py`). It's fast, and a surviving mutant means the
+the focused mutation check on that file (see
+[Mutation testing](../COMMANDS.md#mutation-testing) for the command and the
+`<module>` naming). It's fast, and a surviving mutant means the
 implementation is running ahead of its tests — speculative code no test pins.
 Dial it back to what the test demands before going on: *remove* the unpinned
 implementation — don't write a new test to cover the survivor. A survivor says

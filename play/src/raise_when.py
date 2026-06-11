@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 
-def raise_if(
+def raise_when(
         erroneous_items: list, *,
         raising_error: type[Exception],
         with_message: Callable[[list], str],

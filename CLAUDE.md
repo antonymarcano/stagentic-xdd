@@ -156,12 +156,12 @@ Then run the tests relevant to the change:
   [`test_utilities/` tests](COMMANDS.md#test_utilities-tests) (fast, no claude CLI).
 - **Change in `play/` beyond a single test file** (or anything integrated):
   the [Full baseline](#full-baseline).
-- **Changed a src file in `source_paths`**: first run the focused
-  [`mutmut run "<file>*"`](COMMANDS.md#mutation-testing) on it (fast — a survivor
-  is speculative code; dial it back). Once clean, run the full-set `mutmut run`
-  over `source_paths` as the regression gate (clean, or every survivor a
-  documented accepted-mutation). ADR 0010; see
-  [working-practices](docs/working-practices.md).
+- **Changed a src file in `source_paths`**: first run the focused mutation
+  check on the file (fast — a survivor is speculative code; dial it back),
+  then the full-set run over `source_paths` as the regression gate (clean, or
+  every survivor a documented accepted-mutation). See
+  [Mutation testing](COMMANDS.md#mutation-testing) for the commands and how to
+  read the result. ADR 0010; see [working-practices](docs/working-practices.md).
 
 A quick sanity check running just the test(s) that correspond to the
 changed production code file(s) is acceptable; call it a sanity check,

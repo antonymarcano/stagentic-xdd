@@ -3,14 +3,14 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 from cases import case
 
-from raise_if import raise_if
+from raise_when import raise_when
 
 
-class TestRaiseIf:
+class TestRaiseWhen:
     def test_does_not_raise_when_there_are_no_items(self):
         no_erroneous_items_to_raise_about = []
         with does_not_raise():
-            raise_if(
+            raise_when(
                 no_erroneous_items_to_raise_about,
                 raising_error=ValueError,
                 with_message=lambda items: "dummy message"
@@ -36,7 +36,7 @@ class TestRaiseIf:
             self, raising_error, erroneous_items, with_message, expected_message,
     ):
         with pytest.raises(raising_error) as excinfo:
-            raise_if(
+            raise_when(
                 erroneous_items,
                 raising_error=raising_error,
                 with_message=with_message

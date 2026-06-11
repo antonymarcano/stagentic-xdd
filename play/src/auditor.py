@@ -1,13 +1,17 @@
 from pathlib import Path
 
-from result import Failure, Success
+from inspector import Inspector
+from result import Failure, Result, Success
 from scorecard_results import ScorecardResults
 
 
-class Auditor:
-    # noinspection PyMethodMayBeStatic
-    # - to preserve consistency with Critic.evaluate
-    def evaluate(self, *, evidence_source, working_dir, should):
+class Auditor(Inspector):
+    def evaluate(
+            self, *,
+            evidence_source: Path,
+            working_dir: Path,
+            should: list[dict],
+    ) -> Result[ScorecardResults, list[dict[str, str]]]:
         if not should: raise ValueError("scorecard must not be empty")
 
         evidence_content = evidence_source.read_text()

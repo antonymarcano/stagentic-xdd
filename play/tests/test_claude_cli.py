@@ -1,7 +1,7 @@
 from unittest.mock import ANY, MagicMock
 
 import pytest
-from hamcrest import has_item, has_items, is_not
+from hamcrest import has_item, has_items
 from matchers import matching
 from test_doubles.stubbed_subprocess import StubbedSubprocess
 
@@ -16,30 +16,35 @@ class TestClaudeCli:
                     returncode=0, stdout="run complete\n"
                 )
             )
+            prompt = "evaluate this"
 
-            result = ClaudeCli(subprocess=subprocess)(
-                "evaluate this",
+            result = ClaudeCli(runner=subprocess)(
+                prompt,
                 workspace=tmp_path,
                 session_id="abc-123"
             )
 
             subprocess.assert_called_once_with(
-                ["claude", "--permission-mode", "acceptEdits",
+                ["claude", "-p", prompt,
+                 "--permission-mode", "acceptEdits",
                  "--session-id", "abc-123",
-                 "--add-dir", str(tmp_path),
-                 "-p", "evaluate this"],
+                 "--add-dir", str(tmp_path)],
                 cwd=tmp_path,
                 capture_output=True,
                 text=True,
             )
             assert result == "run complete\n"
 
-        def test_should_return_stdout(self):
+        def test_should_return_stdout(self, tmp_path):
             successful = StubbedSubprocess(
                 returncode=0, stdout="PASS\n"
             )
 
-            result = ClaudeCli(subprocess=successful)("any prompt")
+            result = ClaudeCli(runner=successful)(
+                "any prompt",
+                workspace=tmp_path,
+                session_id="any session id"
+            )
 
             assert result == "PASS\n"
 
@@ -48,17 +53,23 @@ class TestClaudeCli:
         def subprocess_that_succeeds(self):
             return MagicMock(side_effect=StubbedSubprocess(returncode=0))
 
-        def test_should_include_the_prompt(self, subprocess_that_succeeds):
-            ClaudeCli(subprocess=subprocess_that_succeeds)("another prompt")
+        def test_should_include_the_prompt(self, tmp_path, subprocess_that_succeeds):
+            prompt = "another prompt"
+
+            ClaudeCli(runner=subprocess_that_succeeds)(
+                prompt,
+                workspace=tmp_path,
+                session_id="any session id"
+            )
 
             subprocess_that_succeeds.assert_called_once_with(
-                matching(has_item("another prompt")),
+                matching(has_item(prompt)),
                 cwd=ANY, capture_output=ANY, text=ANY,
             )
 
-        def test_should_include_the_session_id(self, subprocess_that_succeeds):
-            ClaudeCli(subprocess=subprocess_that_succeeds)(
-                "any prompt", session_id="xyz-789"
+        def test_should_include_the_session_id(self, tmp_path, subprocess_that_succeeds):
+            ClaudeCli(runner=subprocess_that_succeeds)(
+                "any prompt", session_id="xyz-789", workspace=tmp_path
             )
 
             subprocess_that_succeeds.assert_called_once_with(
@@ -66,18 +77,11 @@ class TestClaudeCli:
                 cwd=ANY, capture_output=ANY, text=ANY,
             )
 
-        def test_should_omit_the_session_id_when_not_provided(self, subprocess_that_succeeds):
-            ClaudeCli(subprocess=subprocess_that_succeeds)("any prompt")
-
-            subprocess_that_succeeds.assert_called_once_with(
-                matching(is_not(has_item("--session-id"))),
-                cwd=ANY, capture_output=ANY, text=ANY,
-            )
-
         def test_should_pass_the_workspace_as_add_dir_and_cwd(self, tmp_path, subprocess_that_succeeds):
-            ClaudeCli(subprocess=subprocess_that_succeeds)(
+            ClaudeCli(runner=subprocess_that_succeeds)(
                 "any prompt",
-                workspace=tmp_path
+                workspace=tmp_path,
+                session_id="any session id"
             )
 
             subprocess_that_succeeds.assert_called_once_with(
@@ -86,20 +90,25 @@ class TestClaudeCli:
                 capture_output=ANY, text=ANY,
             )
 
-        def test_should_omit_the_workspace_when_not_provided(self, subprocess_that_succeeds):
-            ClaudeCli(subprocess=subprocess_that_succeeds)("any prompt")
-
-            subprocess_that_succeeds.assert_called_once_with(
-                matching(is_not(has_item("--add-dir"))),
-                cwd=None,
-                capture_output=ANY, text=ANY,
-            )
-
     class TestErrors:
-        def test_should_raise_RuntimeError_when_subprocess_fails(self):
+        # noinspection PyArgumentList
+        # - because we're protecting against changes that make it optional.
+        def test_should_require_a_workspace(self, dummy):
+            with pytest.raises(TypeError):
+                ClaudeCli(runner=dummy)("any prompt", session_id="xyz-789")
+
+        # noinspection PyArgumentList
+        # - because we're protecting against changes that make it optional.
+        def test_should_require_a_session_id(self, tmp_path, dummy):
+            with pytest.raises(TypeError):
+                ClaudeCli(runner=dummy)("any prompt", workspace=tmp_path)
+
+        def test_should_raise_RuntimeError_when_subprocess_fails(self, tmp_path):
             failing = StubbedSubprocess(
                 returncode=1, stderr="something went wrong"
             )
 
             with pytest.raises(RuntimeError, match="something went wrong"):
-                ClaudeCli(subprocess=failing)("any prompt")
+                ClaudeCli(runner=failing)(
+                    "any prompt", workspace=tmp_path, session_id="any session id"
+                )

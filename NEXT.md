@@ -55,7 +55,7 @@ don't bury NEXT.md.
 - [ ] `transcriber.py` (and `tests/test_transcriber.py`)
 - [ ] `claude_jsonl_path.py` (and `tests/test_claude_jsonl_path.py`)
 - [ ] `failure_message.py` (and `tests/test_failure_message.py`)
-- [ ] `raise_if.py` (and `tests/test_raise_if.py`)
+- [ ] `raise_when.py` (and `tests/test_raise_when.py`)
 - [ ] `scorecard_json_extraction.py` (and `tests/test_scorecard_json_extraction.py`)
 - [ ] `inspector.py` — No test yet
 
@@ -166,9 +166,10 @@ The hooks — built, and candidates:
   `hookSpecificOutput.additionalContext` — the actual words, not a pointer,
   because the failure mode was paraphrase, not ignorance. Cannot block.
 - **PostToolUse after pytest — green nudge (built, proven this session).**
-  On a pytest green, injects a reminder to run focused
-  `mutmut run "<module>*"` on the in-flight file before moving on. Cannot
-  block (it runs after the tool); a pure reminder. Targets the exact miss:
+  On a pytest green, injects a reminder to run the focused mutation check
+  (see [Mutation testing](COMMANDS.md#mutation-testing)) on the in-flight
+  file before moving on. Cannot block (it runs after the tool); a pure
+  reminder. Targets the exact miss:
   moving on from a green without the focused mutation test.
 - **PostToolUse after mutmut — marker writer (candidate).** Would detect
   `mutmut run`, parse the result, and write a marker (timestamp +
