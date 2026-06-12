@@ -11,15 +11,26 @@ for, then propose a commit — behavioural and structural changes kept in
 separate commits (see
 [`docs/working-practices.md`](docs/working-practices.md)).
 
+At the start of the review run the full baseline tests and then full mutation test.
+If clear, for a file under review, add all lenses in the correct order to the task list.
+For each, one at a time:
+- Tell me the lens
+- If no issues seen through that lens, say no issues (no explanation needed)
+- If changes are required, show me the before and after of the change you propose.  
+
 ### Reviewing a test file
 
 Review the file through each lens below in turn, confirming each one by
 one — even where it needs no change. Most lenses are the conventions in
 [`docs/architecture/conventions/test-conventions.md`](docs/architecture/conventions/test-conventions.md);
 the last two are inferred from the reviewed exemplars.
+Add each lens to your task list for easy tracking in the session.
+
+Review the file through each lens below in turn and in the order below:
 
 - Test naming `test_should_<behaviour>`
 - Test order follows the production code's execution flow
+- MagicMock interrogation forms
 - Whole-story tests
 - Test names read in context of their holding class
 - Per-property test layout: relevant kwargs at the top
@@ -29,7 +40,6 @@ the last two are inferred from the reviewed exemplars.
 - Don't test Python's own enforcement
 - Assertion vocabulary: PyHamcrest matchers
 - Pin exact composed output once via `==`
-- MagicMock interrogation forms
 - `spec=Class` vs `spec=Class()` for directly-callable spies
 - Stub callable → lambda; spy callable → `MagicMock`
 - Marker placement: lane marker on the holding class, not the method (inferred)
@@ -40,6 +50,9 @@ the last two are inferred from the reviewed exemplars.
 As above, but through these lenses. Most are the conventions in
 [`docs/architecture/conventions/src-conventions.md`](docs/architecture/conventions/src-conventions.md);
 the last two are inferred from the reviewed exemplars.
+Add each lens to your task list for easy tracking in the session.
+
+Review the file through each lens below in turn and in the order below:
 
 - Type hints on every public method parameter (avoid `Any`)
 - Required vs optional: no `| None = None` defaults for test convenience
@@ -93,7 +106,7 @@ don't bury NEXT.md.
 - [x] `result_matchers.py` (and `tests/test_result_matchers.py`)
 - [x] `fake_agent.py` (and `tests/test_fake_agent.py`)
 - [x] `claude_cli.py` (and `tests/test_claude_cli.py`, `tests/contract/test_claude_cli.py`)
-- [ ] `claude_session.py` (and `tests/test_claude_session.py`)
+- [x] `claude_session.py` (and `tests/test_claude_session.py`)
 - [ ] `auditor.py` (and `tests/test_auditor.py`)
 - [ ] `scorecard_results.py` (and `tests/test_scorecard_results.py`)
   - Outstanding improvements tracked in
@@ -114,6 +127,28 @@ A cross-cutting improvement surfaced by the critic extraction — a
 
 - [ ] `archiver.py` (and `tests/test_archiver.py`)
 - [ ] `conftest.py`
+
+### Error handling (cross-cutting — final review)
+
+A final pass over error handling across the harness, after the per-file
+reviews above. `ClaudeSession`, for one, has no error handling and does not
+wrap errors raised by `ClaudeCli` — whether it should is a question the
+per-file lenses don't currently cover.
+
+**Prerequisite:** the error-handling strategy must be agreed and documented
+first. An ADR captures the 'why' and proposes the 'how';
+`docs/architecture/conventions/src-conventions.md` hosts the finally agreed
+'how'. The review checks each file against the agreed convention, so it
+can't run until that convention exists.
+
+A candidate convention to start from — every public entry point to the
+`play` framework:
+- returns `Success` when it succeeds;
+- returns `Failure` for an in-domain failure;
+- raises an exception for a mechanical/infrastructure failure (file not
+  found, network unavailable).
+
+This may become the standard for all files.
 
 ## 2. Write the xdd skill
 

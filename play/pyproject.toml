@@ -56,6 +56,6 @@ markers = [
 ]
 
 [tool.mutmut]
-source_paths = ["src/critic.py", "src/agent.py", "src/result.py", "src/fake_agent.py", "src/result_matchers.py", "src/auditor.py", "src/claude_cli.py"]
+source_paths = ["src/critic.py", "src/agent.py", "src/result.py", "src/fake_agent.py", "src/result_matchers.py", "src/auditor.py", "src/claude_cli.py", "src/claude_session.py"]
 also_copy = ["src/"]
 pytest_add_cli_args_test_selection = ["-m", "not contract and not integration"]
