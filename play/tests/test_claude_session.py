@@ -6,7 +6,7 @@ from hamcrest import assert_that, equal_to
 from claude_cli import ClaudeCli
 from claude_jsonl_path import ClaudeJsonlPath
 from claude_session import ClaudeSession
-from transcriber import Transcriber
+from claude_transcriber import ClaudeTranscriber
 
 _FAKE_SESSION_ID = "fake-sid"
 _ANOTHER_FAKE_SESSION_ID = "another-fake-sid"
@@ -26,7 +26,7 @@ class TestClaudeSession:
             session_id=_FAKE_SESSION_ID,
         )
         claude_spy = MagicMock(spec=ClaudeCli(), return_value=cli_result)
-        transcriber_spy = MagicMock(spec=Transcriber())
+        transcriber_spy = MagicMock(spec=ClaudeTranscriber())
 
         result = ClaudeSession(
             claude=claude_spy,
@@ -117,7 +117,7 @@ class TestClaudeSession:
     class TestCallsTranscriber:
         @patch("claude_session.uuid.uuid4", return_value=_ANOTHER_FAKE_SESSION_ID)
         def test_should_build_the_jsonl_path_from_home_working_dir_and_session_id(self, _uuid, dummy):
-            transcriber_spy = MagicMock(spec=Transcriber())
+            transcriber_spy = MagicMock(spec=ClaudeTranscriber())
             home = Path("/another/home")
             working_dir = Path("/another/dir")
             expected_jsonl_path = ClaudeJsonlPath(
@@ -138,7 +138,7 @@ class TestClaudeSession:
             )
 
         def test_should_pass_the_transcript_path(self, dummy):
-            transcriber_spy = MagicMock(spec=Transcriber())
+            transcriber_spy = MagicMock(spec=ClaudeTranscriber())
 
             ClaudeSession(
                 transcriber=transcriber_spy,

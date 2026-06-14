@@ -12,11 +12,32 @@ separate commits (see
 [`docs/working-practices.md`](docs/working-practices.md)).
 
 At the start of the review run the full baseline tests and then full mutation test.
-If clear, for a file under review, add all lenses in the correct order to the task list.
-For each, one at a time:
+If clear, for a file under review, add all lenses in the correct order to 
+the task list before reviewing any files. Number each lens in the task list.
+
+Then, once the task list is complete, for each lens, one at a time, review the
+file through that lens and:
 - Tell me the lens
-- If no issues seen through that lens, say no issues (no explanation needed)
-- If changes are required, show me the before and after of the change you propose.  
+- If no issues seen through that lens, say no issues (no explanation
+  needed) and await the user's approval to proceed to the next lens.
+- If changes are required, show me the before and after of the change you
+  propose and await the user's approval to proceed.
+
+Review the file *only* when its lens is the active one — and read it fresh at
+that moment, along with any other file the lens needs (e.g. the production
+source for the execution-flow lens). Do not read the whole file, nor any file
+a later lens will need, up front. Each lens is a fresh pass: look at the file
+through that lens alone, report, and only then move to the next.
+
+Reading fresh at each lens is correctness, not tidiness. A lens reviews the
+file's current state — which includes any change an earlier lens produced. A
+read taken before those changes is stale, so a lens reviewing against it is
+reviewing text that no longer exists. Re-read when the lens becomes active so
+every pass sees what is actually there.
+
+Reporting lens-by-lens in order is necessary but not sufficient — the
+examination itself must be lens-at-a-time, not a single up-front sweep
+re-narrated as separate lenses.
 
 ### Reviewing a test file
 
@@ -28,11 +49,11 @@ Add each lens to your task list for easy tracking in the session.
 
 Review the file through each lens below in turn and in the order below:
 
-- Test naming `test_should_<behaviour>`
-- Test order follows the production code's execution flow
-- MagicMock interrogation forms
 - Whole-story tests
-- Test names read in context of their holding class
+- Test order follows the production code's execution flow
+- Tests can be grouped in classes that express key variations in behaviour
+- Test naming `test_should_<behaviour>` and each reads in context of its holding class
+- MagicMock interrogation forms
 - Per-property test layout: relevant kwargs at the top
 - Explicit no-raise via `does_not_raise`
 - Write parametrise rows with `case`
@@ -107,11 +128,12 @@ don't bury NEXT.md.
 - [x] `fake_agent.py` (and `tests/test_fake_agent.py`)
 - [x] `claude_cli.py` (and `tests/test_claude_cli.py`, `tests/contract/test_claude_cli.py`)
 - [x] `claude_session.py` (and `tests/test_claude_session.py`)
-- [ ] `auditor.py` (and `tests/test_auditor.py`)
-- [ ] `scorecard_results.py` (and `tests/test_scorecard_results.py`)
-  - Outstanding improvements tracked in
-    [`docs/architecture/improvements/scorecard_results.md`](docs/architecture/improvements/scorecard_results.md).
-- [ ] `transcriber.py` (and `tests/test_transcriber.py`)
+- [x] `auditor.py` (and `tests/test_auditor.py`)
+- [x] `scorecard_results.py` (and `tests/test_scorecard_results.py`)
+- [ ] `claude_transcriber.py` (and `tests/test_claude_transcriber.py`) —
+  mutation coverage is below acceptable; the rendering helpers carry many
+  survivors. This must be addressed before any further work on
+  `ClaudeTranscriber` begins.
 - [ ] `claude_jsonl_path.py` (and `tests/test_claude_jsonl_path.py`)
 - [ ] `failure_message.py` (and `tests/test_failure_message.py`)
 - [ ] `raise_when.py` (and `tests/test_raise_when.py`)
@@ -127,6 +149,27 @@ A cross-cutting improvement surfaced by the critic extraction — a
 
 - [ ] `archiver.py` (and `tests/test_archiver.py`)
 - [ ] `conftest.py`
+
+### `Auditor.evaluate` should derive per-row status, not hard-code PASS
+
+`Auditor.evaluate`'s success branch hard-codes `"status": "PASS"` for every
+result row. It can, because that branch is reached only when `_failures_from`
+returns empty — the all-pass case. The literal is a symptom: the Auditor
+reimplements pass/fail branching instead of delegating to
+`ScorecardResults.failures()` the way `Critic.evaluate` does. On success it
+hand-builds an all-PASS `results` list; on any failure it returns `Failure(...)`
+and bypasses `ScorecardResults` entirely.
+
+The symmetric fix mirrors `Critic.evaluate`: evaluate each row once into a real
+`PASS`/`FAIL` status, build `ScorecardResults(should=should, results=<those
+rows>)`, then `match scorecard.failures()`. Then the status is derived per row,
+never a literal, and both `evaluate` methods read alike.
+
+This is a **behavioural** change, not a refactor: it changes what
+`ScorecardResults.should` holds on the Auditor path (today
+`_entries_from(should)`; Critic stores the raw `should`) and the `Failure`
+payload shape, so it needs test updates. It is adjacent to the deferred
+`ScorecardEntry` work above — do it as its own red-green.
 
 ### Error handling (cross-cutting — final review)
 
@@ -152,7 +195,7 @@ This may become the standard for all files.
 
 ## 2. Write the xdd skill
 
-The `play/` harness is committed: `Agent`, `Transcriber`, and JSONL path
+The `play/` harness is committed: `Agent`, `ClaudeTranscriber`, and JSONL path
 computation are in `play/src/`. What remains on the harness side is wiring
 `spec/conftest.py` to expose `--agent=real` — this was built and validated
 locally but reverted pending the scenario passing.

@@ -21,8 +21,7 @@ class Auditor(Inspector):
             case []:
                 return Success(ScorecardResults(
                     should=_entries_from(should),
-                    results=[{"characteristic": row["characteristic"], "status": "PASS"}
-                             for row in should],
+                    results=_passes_from(should),
                 ))
             case failures:
                 return Failure(failures)
@@ -34,3 +33,7 @@ def _entries_from(failures: list[dict]) -> list[dict[str, str]]:
 
 def _failures_from(content: str, working_dir: Path, should: list[dict]) -> list[dict]:
     return [row for row in should if not row["verify"](content, working_dir)]
+
+
+def _passes_from(should: list[dict]) -> list[dict[str, str]]:
+    return [{"characteristic": row["characteristic"], "status": "PASS"} for row in should]

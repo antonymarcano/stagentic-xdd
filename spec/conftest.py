@@ -4,9 +4,9 @@ import pytest
 from auditor import Auditor
 from claude_cli import ClaudeCli
 from claude_session import ClaudeSession
+from claude_transcriber import ClaudeTranscriber
 from critic import Critic
 from fake_agent import FakeAgent
-from transcriber import Transcriber
 
 from archiver import archive, current_timestamp
 
@@ -36,7 +36,7 @@ def inspector(request):
         case "auditor":
             return Auditor()
         case "critic":
-            return Critic(session=ClaudeSession(claude=ClaudeCli(), transcriber=Transcriber(), home=Path.home()))
+            return Critic(session=ClaudeSession(claude=ClaudeCli(), transcriber=ClaudeTranscriber(), home=Path.home()))
 
 
 @pytest.fixture

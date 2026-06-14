@@ -16,9 +16,9 @@ Tests inside a `TestX` class are ordered to mirror the execution flow of the pro
 
 ## Whole-story tests
 
-A **whole-story test** pins *everything the subject does* — such as every call to every collaborator, in one test. Per-property tests drill into smaller specific facts the whole-story covers. The whole-story test may be written first or last (the latter allowing for the code to be built up one test at a time).
+A **whole-story test** pins *everything the subject does* — such as every call to every collaborator, in one test. Per-property tests drill into smaller specific facts the whole-story test covers. The whole-story test may be written first or last (the latter allowing for the code to be built up one test at a time).
 
-**The whole-story test shows the subject's distinguishing outcome.** When the subject's purpose is to dispatch a call to a collaborator (e.g. `ClaudeSession.run`), the whole-story shows that call going through. When the subject's purpose is to raise — to assert, to signal a failure — the whole-story shows it raising, because without the raise the test stops short of what the subject *does*.
+**The whole-story test shows the subject's distinguishing outcome.** When the subject's purpose is to dispatch a call to a collaborator (e.g. `ClaudeSession.run`), the whole-story test shows that call going through. When the subject's purpose is to raise — to assert, to signal a failure — the whole-story test shows it raising, because without the raise the test stops short of what the subject *does*.
 
 **Shape:** pin the composed collaborator interaction exactly via `==` / `assert_called_once_with` (see *Pin exact composed output once via `==`*); slots whose check isn't plain `==` carry a matcher via `matching(...)` (see *Assertion vocabulary*). One example per property is enough in the whole-story test itself — the second example for each property comes from a sibling per-property test (see companion rule below).
 
@@ -26,9 +26,9 @@ A **whole-story test** pins *everything the subject does* — such as every call
 
 Outcome and phase groupings can combine: outcome classes (`TestPasses`, `TestFails`) frame the file; phase classes (`TestBuildsPrompt`, `TestCallsSession`, `TestParsesResponse`) sit in between in play order; `TestErrors` trails as the exception paths.
 
-**Companion rule for per-property tests:** when a whole-story test exists, per-property tests for value-flow properties may collapse from parametrised (≥2 cases) to a single example — provided that example uses a value *different* from the whole-story's. The pair (per-property + whole-story) supplies the ≥2 examples needed for mutation coverage (see *Parametrise value-flow tests over ≥2 cases with `ids`*). If the values match, the second example evaporates.
+**Companion rule for per-property tests:** when a whole-story test exists, per-property tests for value-flow properties may collapse from parametrised (≥2 cases) to a single example — provided that example uses a value *different* from the whole-story test's. The pair (per-property test + whole-story test) supplies the ≥2 examples needed for mutation coverage (see *Parametrise value-flow tests over ≥2 cases with `ids`*). If the values match, the second example evaporates.
 
-**Don't fragment into one test per fact.** When a whole-story test exists, per-property tests don't earn their place by virtue of being possible — they earn their place when value, presence, or absence alters behaviour (see *Pin exact composed output once via `==`*). Fragmenting a whole-story test into one test per fact loses the integrated narrative the whole-story conveys.
+**Don't fragment into one test per fact.** When a whole-story test exists, per-property tests don't earn their place by virtue of being possible — they earn their place when value, presence, or absence alters behaviour (see *Pin exact composed output once via `==`*). Fragmenting a whole-story test into one test per fact loses the integrated narrative the whole-story test conveys.
 
 ## Test names read in context of their holding class
 
@@ -133,7 +133,7 @@ When a test asserts that a value passed in flows through to a destination, param
 
 **When this doesn't apply:** structural assertions that don't carry a value — e.g. "no exception raised when all checks pass" or "the path is under `.claude/projects`" — are correctly exercised with a single example, because the property isn't "this value flowed through" but "this structural fact holds."
 
-The two cases may instead be split across a whole-story and a per-property test — see *Whole-story tests*.
+The two cases may instead be split across a whole-story test and a per-property test — see *Whole-story tests*.
 
 ## Don't test Python's own enforcement
 

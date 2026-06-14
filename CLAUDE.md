@@ -56,7 +56,7 @@ The approach is explained in ADR 0001
     `scene/` directory holds the canned workspace state after the
     task completes. See ADR 0007 for the chain pattern.
 - `play/` — the in-repo embryo of `stagentic-play` (ADR 0001 §33).
-  Framework code — `Agent`, `FakeAgent`, `Transcriber`, `Auditor`, `Critic`,
+  Framework code — `Agent`, `FakeAgent`, `ClaudeTranscriber`, `Auditor`, `Critic`,
   `ClaudeSession`, `ClaudeCli`, and `Inspector` — that scenarios reach via pytest fixtures. Is an
   installable package with its own pyproject.toml and unit-test suite, which
   `spec` consumes via an editable path source. Test doubles live in

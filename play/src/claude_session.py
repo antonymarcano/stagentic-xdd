@@ -3,14 +3,14 @@ from pathlib import Path
 
 from claude_cli import ClaudeCli
 from claude_jsonl_path import ClaudeJsonlPath
-from transcriber import Transcriber
+from claude_transcriber import ClaudeTranscriber
 
 
 class ClaudeSession:
     def __init__(
             self, *,
             claude: ClaudeCli,
-            transcriber: Transcriber,
+            transcriber: ClaudeTranscriber,
             home: Path
     ):
         self._call_claude_with = claude

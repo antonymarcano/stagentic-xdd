@@ -6,9 +6,9 @@ from matchers import does_not
 
 from claude_cli import ClaudeCli
 from claude_session import ClaudeSession
+from claude_transcriber import ClaudeTranscriber
 from critic import Critic
 from result_matchers import is_a_success
-from transcriber import Transcriber
 
 _TRANSCRIPT_PYTEST_RAN_AND_PASSED = """\
 [TOOL] **Bash** `uv run pytest tests/`
@@ -29,7 +29,7 @@ class TestCriticIntegration:
     def session(self):
         return ClaudeSession(
             claude=ClaudeCli(),
-            transcriber=Transcriber(),
+            transcriber=ClaudeTranscriber(),
             home=Path.home(),
         )
 

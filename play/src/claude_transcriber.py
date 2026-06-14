@@ -5,8 +5,6 @@ from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
 
-from claude_jsonl_path import ClaudeJsonlPath
-
 Block = namedtuple("Block", ["timestamp", "kind", "content", "body"], defaults=[""])
 
 _RENDERERS = {
@@ -18,14 +16,15 @@ _RENDERERS = {
 }
 
 
-class Transcriber:
-    def __call__(self, *, jsonl_path: ClaudeJsonlPath, output_path: Path):
-        output_path.write_text(self.render(jsonl_path))
+class ClaudeTranscriber:
+    def __call__(self, *, jsonl_path: Path, output_path: Path):
+        output_path.write_text(_render(jsonl_path))
 
-    def render(self, jsonl_path: ClaudeJsonlPath):
-        return "".join(
-            map(_format, _blocks(jsonl_path))
-        )
+
+def _render(jsonl_path: Path):
+    return "".join(
+        map(_format, _blocks(jsonl_path))
+    )
 
 
 def _blocks(jsonl_path):

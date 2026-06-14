@@ -11,7 +11,7 @@ class ScorecardResults:
     results: list[dict]
 
     @classmethod
-    def from_(cls, maybe_results, should):
+    def from_(cls, *, maybe_results: list[dict], should: list[dict]):
         results = _results_unless(
             maybe_results,
             has_problem=_invalid,
@@ -44,7 +44,7 @@ def _results_unless(maybe_results, *, has_problem, raising_error):
 def _invalid(maybe_results):
     problems = _problems_of([
         _empty(maybe_results),
-        _invalid_rows_in(maybe_results),
+        _invalid_results_from(maybe_results),
     ])
     return _problems_message(problems) if problems else None
 
@@ -53,7 +53,7 @@ def _empty(maybe_results):
     return "results must not be empty" if not maybe_results else None
 
 
-def _invalid_rows_in(maybe_results):
+def _invalid_results_from(maybe_results):
     results_with_missing_keys = [
         result for result in maybe_results if _is_missing_key_from(result)
     ]
