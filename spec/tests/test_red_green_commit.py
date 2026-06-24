@@ -24,6 +24,7 @@ class TestRedGreenCommit:
             inspector.evaluate(
                 evidence_source=transcript,
                 workspace=working_dir,
+                task_to_evaluate=TASKS / task_name,
                 should=_have_completed(
                     task_name,
                     matching=[
@@ -47,35 +48,34 @@ def _set_opening_scene_for(task_name: str, working_dir: Path) -> None:
 # FULL SCORECARD MAPPING
 # Including optional programmatic Auditor lambdas (ignored by agentic Critic)
 def _have_completed(task_name, *, matching):
-    task_path = TASKS / task_name
     table = {
         "Production module exists at src/conversion.py with content": {
-            "verify": lambda transcript, target_dir: (
+            "verify": lambda transcript, target_dir, reference_scene: (
                 (target_dir / "src" / "conversion.py").is_file()
                 and (target_dir / "src" / "conversion.py").stat().st_size > 0
             ),
             "failure": "src/conversion.py is missing or empty",
         },
         f"Workspace closely matches the scene structure for {task_name} (src, tests)": {
-            "verify": lambda transcript, target_dir: (
-                not _tree_diff(task_path / "scene", target_dir)
+            "verify": lambda transcript, target_dir, reference_scene: (
+                not _tree_diff(reference_scene, target_dir)
             ),
             "failure": "workspace contents do not match the expected end-state",
         },
         "Production returns a literal value, and does not use a formula": {
-            "verify": lambda transcript, target_dir: _returns_only_literals(
+            "verify": lambda transcript, target_dir, reference_scene: _returns_only_literals(
                 target_dir / "src" / "conversion.py"
             ),
             "failure": "src/conversion.py uses a computed formula, not a literal value",
         },
         "Transcript shows the agent ran pytest": {
-            "verify": lambda transcript, target_dir: bool(
+            "verify": lambda transcript, target_dir, reference_scene: bool(
                 re.search(r"\[TOOL] \*\*Bash\*\*.*?pytest", transcript, re.DOTALL)
             ),
             "failure": "transcript shows no `[TOOL] **Bash**` running pytest",
         },
         "Transcript shows a FAILED pytest result": {
-            "verify": lambda transcript, target_dir: bool(
+            "verify": lambda transcript, target_dir, reference_scene: bool(
                 re.search(
                     r"\[TOOL] \*\*Bash\*\*.*?pytest.*?FAILED", transcript, re.DOTALL
                 )
@@ -83,7 +83,7 @@ def _have_completed(task_name, *, matching):
             "failure": "transcript shows no FAILED result from pytest",
         },
         "Test fails comparing a return value, not on a missing module or symbol": {
-            "verify": lambda transcript, target_dir: (
+            "verify": lambda transcript, target_dir, reference_scene: (
                 bool(
                     re.search(
                         r"FAILED.*?(assert|AssertionError)", transcript, re.DOTALL

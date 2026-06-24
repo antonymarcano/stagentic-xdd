@@ -4,7 +4,24 @@
 > immediate next step and is rewritten as work lands; a commit that
 > points at NEXT.md rots the moment the file changes.
 
-## 0. Working approach
+## 1. Walk one cycle with the real agent, to a passing scenario we commit
+
+Before resuming the improvement plan, bring the real-agent path up end to end —
+the goal is a passing scenario, committed.
+
+- Bring back the `--agent=real` wiring in `spec/conftest.py` (built and validated
+  locally before, then reverted).
+- Run the scenario against the untracked task
+  `spec/tasks/1-first-test-for-miles-to-km-converter/TASK.md` with `--agent=real`.
+- The first run is expected to **fail** — with no xdd skill the agent doesn't
+  satisfy the scorecard. That failure confirms the plumbing: the agent runs, a
+  transcript is captured, the inspector evaluates it, and the checks fail for
+  lack of guidance, not a plumbing bug.
+- Add the xdd skill (§4) that steers the agent until the scenario passes.
+- When it passes, commit `spec/conftest.py`, `TASK.md`, and
+  `0-placeholder/scene/.claude/settings.json` together.
+
+## 2. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -87,7 +104,9 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 1. Improvement plan
+## 3. Improvement plan
+
+> Paused — do the §1 walkthrough first.
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -130,10 +149,12 @@ don't bury NEXT.md.
 - [x] `claude_session.py` (and `tests/test_claude_session.py`)
 - [x] `auditor.py` (and `tests/test_auditor.py`)
 - [x] `scorecard_results.py` (and `tests/test_scorecard_results.py`)
-- [ ] `claude_transcriber.py` (and `tests/test_claude_transcriber.py`) —
-  mutation coverage is below acceptable; the rendering helpers carry many
-  survivors. This must be addressed before any further work on
-  `ClaudeTranscriber` begins.
+- [~] `claude_transcriber.py` (and `tests/test_claude_transcriber.py`) —
+  interim mutation coverage added: the `varied-transcript` approval test took
+  survivors 75 → 8 (the remaining 8 are equivalence mutants). Bringing it fully
+  to standard is superseded by a ground-up rewrite — see ADR
+  [0014](docs/architecture/decisions/0014-separate-claude-jsonl-translation-from-the-transcriber.md).
+  Kept out of `source_paths` (the equivalence survivors can't be accepted yet).
 - [ ] `claude_jsonl_path.py` (and `tests/test_claude_jsonl_path.py`)
 - [ ] `failure_message.py` (and `tests/test_failure_message.py`)
 - [ ] `raise_when.py` (and `tests/test_raise_when.py`)
@@ -193,7 +214,7 @@ A candidate convention to start from — every public entry point to the
 
 This may become the standard for all files.
 
-## 2. Write the xdd skill
+## 4. Write the xdd skill
 
 The `play/` harness is committed: `Agent`, `ClaudeTranscriber`, and JSONL path
 computation are in `play/src/`. What remains on the harness side is wiring
@@ -204,8 +225,8 @@ A first draft of the scenario's task,
 `spec/tasks/1-first-test-for-miles-to-km-converter/TASK.md`, already exists in
 the working tree but is deliberately left **untracked**. It lands with the
 commit below (alongside `spec/conftest.py` and
-`0-placeholder/scene/.claude/settings.json`) only once the improvement plan
-(§1) is complete and the scenario passes — not before.
+`0-placeholder/scene/.claude/settings.json`) once the scenario passes (§1) —
+not before.
 
 A real run (before the revert) confirmed all five scorecard checks fail —
 the agent lacks the guidance a skill would provide.

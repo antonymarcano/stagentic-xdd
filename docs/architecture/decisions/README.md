@@ -35,3 +35,4 @@ See [0000](0000-use-adrs-to-record-decisions.md) for more on ADRs, the rationale
 | [0011](0011-adopt-pyhamcrest-for-declarative-assertions.md) | Adopt PyHamcrest for declarative test assertions | Accepted |
 | [0012](0012-adopt-path-source-packages-for-cross-project-code.md) | Adopt path-source packages for cross-project code | Accepted |
 | [0013](0013-agents-and-inspectors-return-a-result-value.md) | Agents and inspectors return a Result value rather than state or exceptions | Accepted |
+| [0014](0014-separate-claude-jsonl-translation-from-the-transcriber.md) | Separate Claude jsonl translation from the transcriber | Proposed |

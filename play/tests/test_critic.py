@@ -22,19 +22,23 @@ class TestCritic:
     def one_characteristic_scorecard(self): return [{"characteristic": "any", "failure": "n/a"}]
 
     @pytest.fixture
+    def task_to_evaluate(self): return Path("/workspace/tasks/3-some-task")
+
+    @pytest.fixture
     def session_that_passes(self):
         session = MagicMock(spec=ClaudeSession)
         session.run.return_value = '[{"characteristic": "any", "status": "PASS"}]'
         return session
 
     class TestFails:
-        def test_should_call_session_and_return_a_failure_for_failed_characteristics(self, evidence_source, working_dir):
+        def test_should_call_session_and_return_a_failure_for_failed_characteristics(self, evidence_source, working_dir, task_to_evaluate):
             session_that_fails = MagicMock(spec=ClaudeSession)
             session_that_fails.run.return_value = '[{"characteristic": "alpha", "status": "FAIL"}]'
 
             result = Critic(session=session_that_fails).evaluate(
                 evidence_source=evidence_source,
                 workspace=working_dir,
+                task_to_evaluate=task_to_evaluate,
                 should=[{"characteristic": "alpha", "failure": "alpha reason"}],
             )
 
@@ -51,7 +55,7 @@ class TestCritic:
                 [{"characteristic": "alpha", "failure": "alpha reason"}])
             ))
 
-        def test_should_return_only_the_failed_rows(self, evidence_source, working_dir):
+        def test_should_return_only_the_failed_rows(self, evidence_source, working_dir, task_to_evaluate):
             session = MagicMock(spec=ClaudeSession)
             session.run.return_value = (
                 '[{"characteristic": "alpha", "status": "PASS"},'
@@ -61,6 +65,7 @@ class TestCritic:
             result = Critic(session=session).evaluate(
                 evidence_source=evidence_source,
                 workspace=working_dir,
+                task_to_evaluate=task_to_evaluate,
                 should=[
                     {"characteristic": "alpha", "failure": "alpha reason"},
                     {"characteristic": "beta", "failure": "beta reason"},
@@ -72,13 +77,14 @@ class TestCritic:
             ))
 
     class TestPasses:
-        def test_should_return_success_with_the_scorecard_when_all_pass(self, evidence_source, working_dir):
+        def test_should_return_success_with_the_scorecard_when_all_pass(self, evidence_source, working_dir, task_to_evaluate):
             session = MagicMock(spec=ClaudeSession)
             session.run.return_value = '[{"characteristic": "alpha", "status": "PASS"}]'
 
             result = Critic(session=session).evaluate(
                 evidence_source=evidence_source,
                 workspace=working_dir,
+                task_to_evaluate=task_to_evaluate,
                 should=[{"characteristic": "alpha", "failure": "alpha reason"}],
             )
 
@@ -88,12 +94,13 @@ class TestCritic:
             ))))
 
     class TestBuildsPrompt:
-        def test_should_include_distinct_evidence_source_in_prompt(self, working_dir, one_characteristic_scorecard, session_that_passes):
+        def test_should_include_distinct_evidence_source_in_prompt(self, working_dir, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
             evidence_source = Path("/workspace/other-run/transcript.md")
 
             Critic(session=session_that_passes).evaluate(
                 evidence_source=evidence_source,
                 workspace=working_dir, should=one_characteristic_scorecard,
+                task_to_evaluate=task_to_evaluate,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -103,12 +110,13 @@ class TestCritic:
                 working_dir=ANY, transcript_path=ANY,
             )
 
-        def test_should_embed_working_dir_in_prompt(self, evidence_source, one_characteristic_scorecard, session_that_passes):
+        def test_should_embed_working_dir_in_prompt(self, evidence_source, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
             working_dir = Path("/workspace/embedded-in-prompt")
 
             Critic(session=session_that_passes).evaluate(
                 workspace=working_dir,
                 evidence_source=evidence_source, should=one_characteristic_scorecard,
+                task_to_evaluate=task_to_evaluate,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -118,7 +126,7 @@ class TestCritic:
                 working_dir=ANY, transcript_path=ANY,
             )
 
-        def test_should_list_characteristic_names_in_prompt(self, evidence_source, working_dir):
+        def test_should_list_characteristic_names_in_prompt(self, evidence_source, working_dir, task_to_evaluate):
             session_that_passes = MagicMock(spec=ClaudeSession)
             session_that_passes.run.return_value = (
                 '[{"characteristic": "first thing", "status": "PASS"},'
@@ -131,6 +139,7 @@ class TestCritic:
                     {"characteristic": "second thing", "failure": "n/a"},
                 ],
                 evidence_source=evidence_source, workspace=working_dir,
+                task_to_evaluate=task_to_evaluate,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -140,13 +149,32 @@ class TestCritic:
                 working_dir=ANY, transcript_path=ANY,
             )
 
+        def test_should_present_reference_scene_for_equivalence(self, evidence_source, working_dir, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
+            Critic(session=session_that_passes).evaluate(
+                task_to_evaluate=task_to_evaluate,
+                evidence_source=evidence_source, workspace=working_dir,
+                should=one_characteristic_scorecard,
+            )
+
+            session_that_passes.run.assert_called_once_with(
+                prompt=matching(all_of(
+                    contains_string(f"Reference scene: {task_to_evaluate / 'scene'}\n"),
+                    contains_string(
+                        "The reference scene is the canonical end-state; "
+                        "for characteristics about the workspace, judge by equivalence to it."
+                    ),
+                )),
+                working_dir=ANY, transcript_path=ANY,
+            )
+
     class TestCallsSession:
-        def test_should_pass_working_dir_to_session(self, evidence_source, one_characteristic_scorecard, session_that_passes):
+        def test_should_pass_working_dir_to_session(self, evidence_source, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
             working_dir = Path("/workspace/passed-to-session")
 
             Critic(session=session_that_passes).evaluate(
                 workspace=working_dir,
                 evidence_source=evidence_source, should=one_characteristic_scorecard,
+                task_to_evaluate=task_to_evaluate,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -154,12 +182,13 @@ class TestCritic:
                 prompt=ANY, transcript_path=ANY,
             )
 
-        def test_should_derive_critique_path_from_working_dir(self, evidence_source, one_characteristic_scorecard, session_that_passes):
+        def test_should_derive_critique_path_from_working_dir(self, evidence_source, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
             working_dir = Path("/workspace/derives-critique-path")
 
             Critic(session=session_that_passes).evaluate(
                 workspace=working_dir,
                 evidence_source=evidence_source, should=one_characteristic_scorecard,
+                task_to_evaluate=task_to_evaluate,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -168,11 +197,12 @@ class TestCritic:
             )
 
     class TestErrors:
-        def test_should_raise_when_the_scorecard_is_empty(self, evidence_source, working_dir, dummy):
+        def test_should_raise_when_the_scorecard_is_empty(self, evidence_source, working_dir, dummy, task_to_evaluate):
             with pytest.raises(ValueError) as excinfo:
                 Critic(session=dummy).evaluate(
                     should=[],
                     evidence_source=evidence_source, workspace=working_dir,
+                    task_to_evaluate=task_to_evaluate,
                 )
 
             assert_that(str(excinfo.value), equal_to(

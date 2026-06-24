@@ -11,4 +11,5 @@ class Inspector(Protocol):
             evidence_source: Path,
             workspace: Path,
             should: list[dict],
+            task_to_evaluate: Path,
     ) -> Result[ScorecardResults, list[dict[str, str]]]: ...

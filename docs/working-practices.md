@@ -45,8 +45,13 @@ target.
 
 **The file you're developing belongs in `source_paths` while you work on it.**
 If it isn't a mutation target yet — a new module — add its path to `source_paths`
-so mutmut mutates it, and run the focused check after *every* green. Keep that
-`source_paths` addition uncommitted until the work's final green. (A *shared test
+so mutmut mutates it, and run the focused check after *every* green. If the module
+is new and developed mutation-clean from the outset — every green free of
+survivors — that `source_paths` addition can be committed as you go, since each
+commit is already a clean baseline. When instead you're bringing an *existing*
+file up to standard and it starts with survivors, keep its `source_paths` addition
+uncommitted until the work's final green, so you never commit a baseline that
+isn't yet clean. (A *shared test
 helper* can't be mutated from under `tests/`: mutmut's source roots are
 hardcoded, so a `tests/`-located file's mutants never map to a covering test.
 Home it in `test_utilities/src` instead, where it's a permanent mutation target

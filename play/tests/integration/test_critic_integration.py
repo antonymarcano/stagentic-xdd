@@ -40,6 +40,7 @@ class TestCriticIntegration:
         result = Critic(session=session).evaluate(
             evidence_source=transcript,
             workspace=tmp_path,
+            task_to_evaluate=tmp_path,
             should=[
                 {"characteristic": "Transcript shows the agent ran pytest",
                  "failure": "No pytest invocation found in the transcript"},
@@ -61,6 +62,7 @@ class TestCriticIntegration:
         result = Critic(session=session).evaluate(
             evidence_source=transcript,
             workspace=tmp_path,
+            task_to_evaluate=tmp_path,
             should=[
                 {"characteristic": "Transcript shows the agent ran pytest",
                  "failure": "No pytest invocation found in the transcript"},

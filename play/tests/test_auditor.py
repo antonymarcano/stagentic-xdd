@@ -20,8 +20,11 @@ class TestAuditor:
     @pytest.fixture
     def dummy_path(self): return Path("/dummy")
 
+    @pytest.fixture
+    def task_to_evaluate(self): return Path("/workspace/tasks/3-some-task")
+
     class TestFails:
-        def test_should_call_verify_and_return_a_failure_for_failed_characteristics(self, tmp_path):
+        def test_should_call_verify_and_return_a_failure_for_failed_characteristics(self, tmp_path, task_to_evaluate):
             evidence_text = "hello agent"
             transcript = tmp_path / "transcript.md"
             transcript.write_text(evidence_text)
@@ -31,6 +34,7 @@ class TestAuditor:
             result = Auditor().evaluate(
                 evidence_source=transcript,
                 workspace=working_dir,
+                task_to_evaluate=task_to_evaluate,
                 should=[
                     {"characteristic": "my characteristic",
                      "verify": verify,
@@ -38,25 +42,26 @@ class TestAuditor:
                 ],
             )
 
-            verify.assert_called_once_with(evidence_text, working_dir)
+            verify.assert_called_once_with(evidence_text, working_dir, task_to_evaluate / "scene")
             assert_that(result, equal_to(Failure([
                 {"characteristic": "my characteristic", "failure": "my failure message"}
             ])))
 
-        def test_should_return_only_the_failed_rows_as_entries(self, evidence_source, dummy_path):
+        def test_should_return_only_the_failed_rows_as_entries(self, evidence_source, dummy_path, task_to_evaluate):
             result = Auditor().evaluate(
                 should=[
                     {"characteristic": "first characteristic",
-                     "verify": lambda transcript, working_dir: False,
+                     "verify": lambda transcript, working_dir, reference_scene: False,
                      "failure": "first failure"},
                     {"characteristic": "middle characteristic",
-                     "verify": lambda transcript, working_dir: True,
+                     "verify": lambda transcript, working_dir, reference_scene: True,
                      "failure": "middle failure"},
                     {"characteristic": "third characteristic",
-                     "verify": lambda transcript, working_dir: False,
+                     "verify": lambda transcript, working_dir, reference_scene: False,
                      "failure": "third failure"},
                 ],
                 evidence_source=evidence_source, workspace=dummy_path,
+                task_to_evaluate=task_to_evaluate,
             )
 
             assert_that(result, equal_to(Failure([
@@ -69,14 +74,15 @@ class TestAuditor:
             case("alpha", characteristic="alpha", failure="alpha reason"),
             case("beta", characteristic="beta", failure="beta reason"),
         ])
-        def test_should_return_success_with_the_scorecard_when_all_pass(self, characteristic, failure, evidence_source, dummy_path):
+        def test_should_return_success_with_the_scorecard_when_all_pass(self, characteristic, failure, evidence_source, dummy_path, task_to_evaluate):
             result = Auditor().evaluate(
                 should=[
                     {"characteristic": characteristic,
-                     "verify": lambda transcript, working_dir: True,
+                     "verify": lambda transcript, working_dir, reference_scene: True,
                      "failure": failure},
                 ],
                 evidence_source=evidence_source, workspace=dummy_path,
+                task_to_evaluate=task_to_evaluate,
             )
 
             assert_that(result, equal_to(Success(ScorecardResults(
@@ -85,7 +91,7 @@ class TestAuditor:
             ))))
 
     class TestCallsVerify:
-        def test_should_pass_evidence_text(self, tmp_path, dummy_path):
+        def test_should_pass_evidence_text(self, tmp_path, dummy_path, task_to_evaluate):
             evidence_text = "different transcript"
             transcript = tmp_path / "transcript.md"
             transcript.write_text(evidence_text)
@@ -99,11 +105,12 @@ class TestAuditor:
                      "failure": "n/a"},
                 ],
                 workspace=dummy_path,
+                task_to_evaluate=task_to_evaluate,
             )
 
-            verify.assert_called_once_with(evidence_text, ANY)
+            verify.assert_called_once_with(evidence_text, ANY, ANY)
 
-        def test_should_pass_working_dir(self, evidence_source):
+        def test_should_pass_working_dir(self, evidence_source, task_to_evaluate):
             working_dir = Path("/some/other/dir")
             verify = MagicMock(return_value=True)
 
@@ -115,16 +122,33 @@ class TestAuditor:
                      "failure": "n/a"},
                 ],
                 evidence_source=evidence_source,
+                task_to_evaluate=task_to_evaluate,
             )
 
-            verify.assert_called_once_with(ANY, working_dir)
+            verify.assert_called_once_with(ANY, working_dir, ANY)
+
+        def test_should_pass_reference_scene(self, evidence_source, dummy_path, task_to_evaluate):
+            verify = MagicMock(return_value=True)
+
+            Auditor().evaluate(
+                task_to_evaluate=task_to_evaluate,
+                should=[
+                    {"characteristic": "captures input",
+                     "verify": verify,
+                     "failure": "n/a"},
+                ],
+                evidence_source=evidence_source, workspace=dummy_path,
+            )
+
+            verify.assert_called_once_with(ANY, ANY, task_to_evaluate / "scene")
 
     class TestErrors:
-        def test_should_raise_when_the_scorecard_is_empty(self, dummy_path):
+        def test_should_raise_when_the_scorecard_is_empty(self, dummy_path, task_to_evaluate):
             with pytest.raises(ValueError) as excinfo:
                 Auditor().evaluate(
                     evidence_source=dummy_path,
                     workspace=dummy_path,
+                    task_to_evaluate=task_to_evaluate,
                     should=[],
                 )
 

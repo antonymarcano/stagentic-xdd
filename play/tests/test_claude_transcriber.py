@@ -6,6 +6,7 @@ from claude_transcriber import ClaudeTranscriber
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SAMPLE_TRANSCRIPT = FIXTURES / "sample-transcript.jsonl"
+VARIED_TRANSCRIPT = FIXTURES / "varied-transcript.jsonl"
 
 
 class TestClaudeTranscriber:
@@ -14,5 +15,13 @@ class TestClaudeTranscriber:
         expected = (FIXTURES / "sample-transcript.md").read_text()
 
         ClaudeTranscriber()(jsonl_path=SAMPLE_TRANSCRIPT, output_path=output_path)
+
+        assert_that(output_path.read_text(), equal_to(expected))
+
+    def test_should_render_varied_entries_to_the_approved_master(self, tmp_path):
+        output_path = tmp_path / "transcript.md"
+        expected = (FIXTURES / "varied-transcript.md").read_text()
+
+        ClaudeTranscriber()(jsonl_path=VARIED_TRANSCRIPT, output_path=output_path)
 
         assert_that(output_path.read_text(), equal_to(expected))

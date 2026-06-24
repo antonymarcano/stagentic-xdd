@@ -36,7 +36,12 @@ def inspector(request):
         case "auditor":
             return Auditor()
         case "critic":
-            return Critic(session=ClaudeSession(claude=ClaudeCli(), transcriber=ClaudeTranscriber(), home=Path.home()))
+            return Critic(
+                session=ClaudeSession(
+                    claude=ClaudeCli(),
+                    transcriber=ClaudeTranscriber(),
+                    home=Path.home())
+            )
 
 
 @pytest.fixture
