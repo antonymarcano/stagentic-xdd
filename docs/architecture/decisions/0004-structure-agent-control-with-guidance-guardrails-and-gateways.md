@@ -85,6 +85,21 @@ The entry point is a Python console script (declared in `pyproject.toml` under
 performs the operation correctly. The agent gets a single, named, approvable
 action; the implementation detail is hidden inside it.
 
+### Concrete mechanisms (non-exhaustive)
+
+The three roles describe the *kind* of control. They are realised through
+concrete vehicles — this list will grow and is not a limit:
+
+- prose `SKILL.md` / `CLAUDE.md` — guidance
+- a Promptbook (PlantUML + DSL) diagram — structured guidance
+- `permissions.deny` in `settings.json` — guardrail
+- a narrowly scoped console-script or bundled MCP server — gateway
+- hooks — guardrail (`PreToolUse` block) or guidance (`PostToolUse` nudge,
+  `SessionStart` inject)
+- sub-agents — a structural layer that channels a sub-task through a scoped agent
+
+A single vehicle may serve more than one role depending on how it is used.
+
 ## Consequences
 
 - Prohibited actions require active circumvention to violate, not merely a

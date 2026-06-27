@@ -11,12 +11,14 @@ class ClaudeCli:
             self, prompt: str, *,
             workspace: Path,
             session_id: str,
+            additional_dirs: tuple[Path, ...] = (),
     ) -> str:
         result = _submit_to(
             self._runner,
             prompt,
             workspace,
-            session_id
+            session_id,
+            additional_dirs,
         )
         _raise_if(
             _is_not_successful(result),
@@ -31,12 +33,14 @@ def _submit_to(
         prompt: str,
         workspace: Path,
         session_id: str,
+        additional_dirs: tuple[Path, ...],
 ) -> subprocess.CompletedProcess:
     return runner(
         _command(
             prompt,
             workspace,
-            session_id
+            session_id,
+            additional_dirs
         ),
         cwd=workspace,
         capture_output=True,
@@ -47,12 +51,14 @@ def _submit_to(
 def _command(
         prompt: str,
         workspace: Path,
-        session_id: str
+        session_id: str,
+        additional_dirs: tuple[Path, ...]
 ) -> list[str]:
     cmd = ["claude", "-p", prompt]
     cmd += ["--permission-mode", "acceptEdits"]
     cmd += ["--session-id", session_id]
-    cmd += ["--add-dir", str(workspace)]
+    for directory in (workspace, *additional_dirs):
+        cmd += ["--add-dir", str(directory)]
     return cmd
 
 

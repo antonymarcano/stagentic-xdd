@@ -1,3 +1,8 @@
+`[VERSIONS]` Used in this run:
+```
+CLI: claude unknown
+MODEL: unknown
+```
 `06:05:02Z` **[QUEUE OPERATION]** enqueue
 
 first line

@@ -36,9 +36,9 @@ class TestCritic:
             session_that_fails.run.return_value = '[{"characteristic": "alpha", "status": "FAIL"}]'
 
             result = Critic(session=session_that_fails).evaluate(
-                evidence_source=evidence_source,
-                workspace=working_dir,
                 task_to_evaluate=task_to_evaluate,
+                workspace=working_dir,
+                evidence_source=evidence_source,
                 should=[{"characteristic": "alpha", "failure": "alpha reason"}],
             )
 
@@ -50,6 +50,7 @@ class TestCritic:
                 )),
                 working_dir=working_dir,
                 transcript_path=working_dir / "critique.md",
+                additional_dirs=(task_to_evaluate / "scene",),
             )
             assert_that(result, equal_to(Failure(
                 [{"characteristic": "alpha", "failure": "alpha reason"}])
@@ -63,9 +64,9 @@ class TestCritic:
             )
 
             result = Critic(session=session).evaluate(
-                evidence_source=evidence_source,
-                workspace=working_dir,
                 task_to_evaluate=task_to_evaluate,
+                workspace=working_dir,
+                evidence_source=evidence_source,
                 should=[
                     {"characteristic": "alpha", "failure": "alpha reason"},
                     {"characteristic": "beta", "failure": "beta reason"},
@@ -82,9 +83,9 @@ class TestCritic:
             session.run.return_value = '[{"characteristic": "alpha", "status": "PASS"}]'
 
             result = Critic(session=session).evaluate(
-                evidence_source=evidence_source,
-                workspace=working_dir,
                 task_to_evaluate=task_to_evaluate,
+                workspace=working_dir,
+                evidence_source=evidence_source,
                 should=[{"characteristic": "alpha", "failure": "alpha reason"}],
             )
 
@@ -99,15 +100,14 @@ class TestCritic:
 
             Critic(session=session_that_passes).evaluate(
                 evidence_source=evidence_source,
-                workspace=working_dir, should=one_characteristic_scorecard,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, workspace=working_dir, should=one_characteristic_scorecard,
             )
 
             session_that_passes.run.assert_called_once_with(
                 prompt=matching(contains_string(
                     f"Transcript: {evidence_source}\n"
                 )),
-                working_dir=ANY, transcript_path=ANY,
+                working_dir=ANY, transcript_path=ANY, additional_dirs=ANY,
             )
 
         def test_should_embed_working_dir_in_prompt(self, evidence_source, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
@@ -115,15 +115,14 @@ class TestCritic:
 
             Critic(session=session_that_passes).evaluate(
                 workspace=working_dir,
-                evidence_source=evidence_source, should=one_characteristic_scorecard,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
             session_that_passes.run.assert_called_once_with(
                 prompt=matching(contains_string(
                     f"Workspace: {working_dir}\n"
                 )),
-                working_dir=ANY, transcript_path=ANY,
+                working_dir=ANY, transcript_path=ANY, additional_dirs=ANY,
             )
 
         def test_should_list_characteristic_names_in_prompt(self, evidence_source, working_dir, task_to_evaluate):
@@ -138,22 +137,20 @@ class TestCritic:
                     {"characteristic": "first thing", "failure": "n/a"},
                     {"characteristic": "second thing", "failure": "n/a"},
                 ],
-                evidence_source=evidence_source, workspace=working_dir,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, workspace=working_dir, evidence_source=evidence_source,
             )
 
             session_that_passes.run.assert_called_once_with(
                 prompt=matching(contains_string(
                     "- first thing\n- second thing"
                 )),
-                working_dir=ANY, transcript_path=ANY,
+                working_dir=ANY, transcript_path=ANY, additional_dirs=ANY,
             )
 
         def test_should_present_reference_scene_for_equivalence(self, evidence_source, working_dir, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
             Critic(session=session_that_passes).evaluate(
                 task_to_evaluate=task_to_evaluate,
-                evidence_source=evidence_source, workspace=working_dir,
-                should=one_characteristic_scorecard,
+                workspace=working_dir, evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
             session_that_passes.run.assert_called_once_with(
@@ -164,7 +161,7 @@ class TestCritic:
                         "for characteristics about the workspace, judge by equivalence to it."
                     ),
                 )),
-                working_dir=ANY, transcript_path=ANY,
+                working_dir=ANY, transcript_path=ANY, additional_dirs=ANY,
             )
 
     class TestCallsSession:
@@ -173,13 +170,12 @@ class TestCritic:
 
             Critic(session=session_that_passes).evaluate(
                 workspace=working_dir,
-                evidence_source=evidence_source, should=one_characteristic_scorecard,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
             session_that_passes.run.assert_called_once_with(
                 working_dir=working_dir,
-                prompt=ANY, transcript_path=ANY,
+                prompt=ANY, transcript_path=ANY, additional_dirs=ANY,
             )
 
         def test_should_derive_critique_path_from_working_dir(self, evidence_source, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
@@ -187,13 +183,23 @@ class TestCritic:
 
             Critic(session=session_that_passes).evaluate(
                 workspace=working_dir,
-                evidence_source=evidence_source, should=one_characteristic_scorecard,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, evidence_source=evidence_source, should=one_characteristic_scorecard,
             )
 
             session_that_passes.run.assert_called_once_with(
                 transcript_path=working_dir / "critique.md",
-                prompt=ANY, working_dir=ANY,
+                prompt=ANY, working_dir=ANY, additional_dirs=ANY,
+            )
+
+        def test_should_grant_the_session_access_to_the_reference_scene(self, evidence_source, working_dir, one_characteristic_scorecard, session_that_passes, task_to_evaluate):
+            Critic(session=session_that_passes).evaluate(
+                task_to_evaluate=task_to_evaluate,
+                workspace=working_dir, evidence_source=evidence_source, should=one_characteristic_scorecard,
+            )
+
+            session_that_passes.run.assert_called_once_with(
+                additional_dirs=(task_to_evaluate / "scene",),
+                prompt=ANY, working_dir=ANY, transcript_path=ANY,
             )
 
     class TestErrors:
@@ -201,8 +207,7 @@ class TestCritic:
             with pytest.raises(ValueError) as excinfo:
                 Critic(session=dummy).evaluate(
                     should=[],
-                    evidence_source=evidence_source, workspace=working_dir,
-                    task_to_evaluate=task_to_evaluate,
+                    task_to_evaluate=task_to_evaluate, workspace=working_dir, evidence_source=evidence_source,
                 )
 
             assert_that(str(excinfo.value), equal_to(

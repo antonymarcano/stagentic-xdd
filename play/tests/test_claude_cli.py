@@ -90,6 +90,25 @@ class TestClaudeCli:
                 capture_output=ANY, text=ANY,
             )
 
+        def test_should_add_the_additional_dir(self, tmp_path, subprocess_that_succeeds):
+            scene = tmp_path / "scene"
+
+            ClaudeCli(runner=subprocess_that_succeeds)(
+                "any prompt",
+                additional_dirs=(scene,),
+                workspace=tmp_path,
+                session_id="any session id",
+            )
+
+            subprocess_that_succeeds.assert_called_once_with(
+                ["claude", "-p", "any prompt",
+                 "--permission-mode", "acceptEdits",
+                 "--session-id", "any session id",
+                 "--add-dir", str(tmp_path),
+                 "--add-dir", str(scene)],
+                cwd=ANY, capture_output=ANY, text=ANY,
+            )
+
     class TestErrors:
         # noinspection PyArgumentList
         # - because we're protecting against changes that make it optional.

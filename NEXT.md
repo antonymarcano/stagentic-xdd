@@ -4,22 +4,44 @@
 > immediate next step and is rewritten as work lands; a commit that
 > points at NEXT.md rots the moment the file changes.
 
-## 1. Walk one cycle with the real agent, to a passing scenario we commit
+## 1. Drive `test_red_green_commit` to a passing state with the real agent
 
-Before resuming the improvement plan, bring the real-agent path up end to end —
-the goal is a passing scenario, committed.
+The real-agent path is wired (`--agent=real` in `spec/conftest.py`, held
+uncommitted). On the current CLI (**2.1.191**) the workspace-trust gate ADR
+[0016](docs/architecture/decisions/0016-trust-the-agent-workspace-for-headless-runs.md)
+addresses is **absent**, so a fresh tmp workspace's `permissions.allow` already
+applies — the real agent can run `uv run pytest`. The scenario's only missing
+piece is the **xdd skill** that steers the agent's Red-Green-Refactor behaviour;
+without it the run fails as a *correct* agent-behaviour failure.
 
-- Bring back the `--agent=real` wiring in `spec/conftest.py` (built and validated
-  locally before, then reverted).
-- Run the scenario against the untracked task
-  `spec/tasks/1-first-test-for-miles-to-km-converter/TASK.md` with `--agent=real`.
-- The first run is expected to **fail** — with no xdd skill the agent doesn't
-  satisfy the scorecard. That failure confirms the plumbing: the agent runs, a
-  transcript is captured, the inspector evaluates it, and the checks fail for
-  lack of guidance, not a plumbing bug.
-- Add the xdd skill (§4) that steers the agent until the scenario passes.
-- When it passes, commit `spec/conftest.py`, `TASK.md`, and
-  `0-placeholder/scene/.claude/settings.json` together.
+The target is the `test_write_a_failing_test` scorecard: a failing test that
+imports from `conversion`, a **literal-returning** stub `src/conversion.py` so
+the test fails at an **assertion** (not import), the agent running pytest, and a
+FAILED result.
+
+Do these in order:
+
+1. **Run the real-agent scenario, preserving artefacts** —
+   `uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts`
+   — to see the current correct failure and keep its critique.
+2. **Record the misstep as a coaching record** (ADR
+   [0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-coaching-records.md))
+   from the preserved critique.
+3. **Write the xdd skill (§4)** and iterate until the scenario passes: steer the
+   agent to replace the placeholder test with a failing test importing from
+   `conversion`, create the literal-returning stub `src/conversion.py`, run
+   `uv run pytest`, and confirm `FAILED`.
+4. **When green, commit the held items:** the real-agent wiring
+   (`spec/conftest.py`, `COMMANDS.md`), `TASK.md`, and
+   `0-placeholder/scene/.claude/settings.json` together; the coaching-process
+   docs (ADR 0015, `docs/coaching/`, and the ADR 0001/0004 + `CLAUDE.md`
+   updates) as their own commit.
+
+**Deferred — versions / CLI upgrade.** ADR
+[0016](docs/architecture/decisions/0016-trust-the-agent-workspace-for-headless-runs.md)
+(trust the workspace) and the move to 2.1.195 aren't needed on 2.1.191 — the
+gate is absent. Pick them up after the scenario passes; the trust marking
+becomes necessary only on 2.1.193+.
 
 ## 2. Improvement plan working approach
 
@@ -217,9 +239,8 @@ This may become the standard for all files.
 ## 4. Write the xdd skill
 
 The `play/` harness is committed: `Agent`, `ClaudeTranscriber`, and JSONL path
-computation are in `play/src/`. What remains on the harness side is wiring
-`spec/conftest.py` to expose `--agent=real` — this was built and validated
-locally but reverted pending the scenario passing.
+computation are in `play/src/`. The `spec/conftest.py` wiring that exposes
+`--agent=real` is in place but held uncommitted until the scenario passes (§1).
 
 A first draft of the scenario's task,
 `spec/tasks/1-first-test-for-miles-to-km-converter/TASK.md`, already exists in
@@ -228,8 +249,8 @@ commit below (alongside `spec/conftest.py` and
 `0-placeholder/scene/.claude/settings.json`) once the scenario passes (§1) —
 not before.
 
-A real run (before the revert) confirmed all five scorecard checks fail —
-the agent lacks the guidance a skill would provide.
+The real run (§1) is a correct failure — the agent lacks the guidance a skill
+would provide.
 
 The workspace already has `spec/tasks/0-placeholder/scene/.claude/settings.json`
 allowing `Bash(uv run pytest*)`, so the agent can run tests once the skill

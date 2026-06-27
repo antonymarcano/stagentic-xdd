@@ -22,14 +22,33 @@ class ClaudeTranscriber:
 
 
 def _render(jsonl_path: Path):
-    return "".join(
-        map(_format, _blocks(jsonl_path))
+    entries = _entries(jsonl_path)
+    return f"`[VERSIONS]` Used in this run:\n```\nCLI: claude {_cli_version(entries)}\nMODEL: {_model(entries)}\n```\n" + "".join(
+        map(_format, _blocks(entries))
     )
 
 
-def _blocks(jsonl_path):
+def _entries(jsonl_path):
     with pathlib.Path(jsonl_path).open() as file:
-        entries = list(map(json.loads, file))
+        return list(map(json.loads, file))
+
+
+def _cli_version(entries):
+    for entry in entries:
+        if entry.get("version"):
+            return entry["version"]
+    return "unknown"
+
+
+def _model(entries):
+    for entry in entries:
+        model = entry.get("message", {}).get("model")
+        if model:
+            return model
+    return "unknown"
+
+
+def _blocks(entries):
     return (
         block
         for entry in entries

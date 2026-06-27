@@ -6,11 +6,11 @@ agent-directive: |
 
 # 0001 — Start development by applying the TDAB pattern with vanilla pytest
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context
 
-This plugin's purpose is to guide an AI agent through Red-Green-Refactor for Python (the inner loop), and — eventually — to drive outer-loop customer scenarios as well. Both loops are themselves driven by agent behaviour, which is non-deterministic and resists ordinary assertions; the [TDAB pattern](https://substack.com/@antonymarcano/note/c-252213610) addresses this by specifying each behaviour as a scenario evaluated against a scorecard rubric.
+This plugin's purpose is to guide an AI agent through BDD/TDD — starting with the inner-loop Red-Green-Refactor cycle — and, eventually, to drive outer-loop customer scenarios as well. The intent is for the plugin to be language-agnostic; we start with Python only because it is the language the plugin and `stagentic-play` are themselves written in, not because the plugin's guidance is limited to it. Both loops are themselves driven by agent behaviour, which is non-deterministic and resists ordinary assertions; the [TDAB pattern](https://substack.com/@antonymarcano/note/c-252213610) addresses this by specifying each behaviour as a scenario evaluated against a scorecard rubric.
 
 We need to choose how those scenarios are expressed and executed during the bootstrap phase, before any framework code exists.
 

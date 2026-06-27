@@ -37,17 +37,13 @@ class TestCriticIntegration:
         transcript = tmp_path / "transcript.md"
         transcript.write_text(_TRANSCRIPT_PYTEST_RAN_AND_FAILED)
 
-        result = Critic(session=session).evaluate(
-            evidence_source=transcript,
-            workspace=tmp_path,
-            task_to_evaluate=tmp_path,
-            should=[
+        result = Critic(session=session).evaluate(task_to_evaluate=tmp_path, workspace=tmp_path,
+                                                  evidence_source=transcript, should=[
                 {"characteristic": "Transcript shows the agent ran pytest",
                  "failure": "No pytest invocation found in the transcript"},
                 {"characteristic": "Transcript shows a PASS pytest result",
                  "failure": "No PASS result found in the transcript"},
-            ],
-        )
+            ])
 
         failed_characteristics = [row["characteristic"] for row in result.value]
         assert_that(failed_characteristics, all_of(
@@ -59,16 +55,12 @@ class TestCriticIntegration:
         transcript = tmp_path / "transcript.md"
         transcript.write_text(_TRANSCRIPT_PYTEST_RAN_AND_PASSED)
 
-        result = Critic(session=session).evaluate(
-            evidence_source=transcript,
-            workspace=tmp_path,
-            task_to_evaluate=tmp_path,
-            should=[
+        result = Critic(session=session).evaluate(task_to_evaluate=tmp_path, workspace=tmp_path,
+                                                  evidence_source=transcript, should=[
                 {"characteristic": "Transcript shows the agent ran pytest",
                  "failure": "No pytest invocation found in the transcript"},
                 {"characteristic": "Transcript shows a PASS pytest result",
                  "failure": "No FAILED result found in the transcript"},
-            ],
-        )
+            ])
 
         assert_that(result, is_a_success())

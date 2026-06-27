@@ -21,13 +21,15 @@ class ClaudeSession:
             self, *,
             prompt: str,
             working_dir: Path,
-            transcript_path: Path
+            transcript_path: Path,
+            additional_dirs: tuple[Path, ...] = (),
     ) -> str:
         session_id = _new_session_id()
         result = self._call_claude_with(
             prompt=prompt,
             workspace=working_dir,
-            session_id=session_id
+            session_id=session_id,
+            additional_dirs=additional_dirs,
         )
         self._transcribe_using(
             jsonl_path=_jsonl_path_for(self._home, working_dir, session_id),

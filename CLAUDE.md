@@ -4,37 +4,42 @@ A planned Claude plugin for language-agnostic BDD/TDD ("XDD"). Initial focus
 is the **inner loop** (Red-Green-Refactor) for Python; the outer loop and
 additional language adapters are deferred.
 
-See `README.md` for the framing and the link to the longer "what almost
+See [`README.md`](README.md) for the framing and the link to the longer "what almost
 everyone gets wrong about TDD/BDD" argument.
 
 ## Where to look first
 
 Read these thoroughly when relevant; don't rely on the one-line summary alone:
 
-- `docs/architecture/decisions/` — architectural directions. Accepted
-  ones must be adhered to; proposed ones are still under evaluation.
-- `NEXT.md` (repo root, if present) — the immediate next step,
+- [`docs/architecture/decisions/`](docs/architecture/decisions/) — architectural directions. Accepted
+  ones must be adhered to; proposed ones are still under evaluation — possibly by being implemented to assess them empirically.
+- [`NEXT.md`](NEXT.md) (repo root, if present) — the immediate next step,
   including known constraints. Read it at session start. If a user
   prompt is open-ended ("let's continue", "what next?"), use NEXT.md
   to orient and propose steps. If NEXT.md is missing, ask the user
   what they want to work on.
-- `COMMANDS.md` (repo root) — key developer commands (test runners, linter).
-- `docs/architecture/conventions/` — naming and design-intent
+- [`COMMANDS.md`](COMMANDS.md) (repo root) — key developer commands (test runners, linter).
+- [`docs/architecture/conventions/`](docs/architecture/conventions/) — naming and design-intent
   conventions that should persist across refactors. Consult when
   touching the affected area:
-  - `test-conventions.md` — test shape for `play/tests/`.
-  - `src-conventions.md` — production code style for `play/src/`.
-  - `spec-conventions.md` — structures and naming intent for `spec/`.
-- `docs/writing-style.md` — prose conventions (label-agnostic
+  - [`test-conventions.md`](docs/architecture/conventions/test-conventions.md) — test shape for `play/tests/`.
+  - [`src-conventions.md`](docs/architecture/conventions/src-conventions.md) — production code style for `play/src/`.
+  - [`spec-conventions.md`](docs/architecture/conventions/spec-conventions.md) — structures and naming intent for `spec/`.
+- [`docs/writing-style.md`](docs/writing-style.md) — prose conventions (label-agnostic
   framing; quote actual stated reasons). Consult when writing
   commits, ADRs, or doc bodies.
-- `docs/commit-style.md` — commit subject/body shape, conventional-commits
+- [`docs/commit-style.md`](docs/commit-style.md) — commit subject/body shape, conventional-commits
   format, ADR-commit layering, commit-proposal format.
-- `docs/document-style.md` — in-repo doc conventions (current-state framing,
+- [`docs/document-style.md`](docs/document-style.md) — in-repo doc conventions (current-state framing,
   environment-agnostic mechanisms).
-- `docs/working-practices.md` — workflow practices: lead with the
+- [`docs/working-practices.md`](docs/working-practices.md) — workflow practices: lead with the
   proposed commit; separate behavioural from structural changes.
   Read it at session start, alongside NEXT.md.
+- [`docs/coaching/`](docs/coaching/) — agent-coaching records: per-misstep
+  BDD/TDD lessons captured while developing the xdd skill. The process is
+  defined in [ADR 0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-coaching-records.md);
+  [`TEMPLATE.md`](docs/coaching/TEMPLATE.md) is the record shape. When a
+  real-agent run reveals a misstep, record it per the ADR.
 
 NEXT.md is not a backlog. When a step from it lands, propose updating
 it to reflect the new state — delete what's done, surface what's next.
@@ -45,8 +50,7 @@ comes after.
 ## Development pattern: TDAB
 
 This plugin is developed using **TDAB** (Test-Driven Agentic Behaviours).
-The approach is explained in ADR 0001
-(`docs/architecture/decisions/0001-start-with-tdab-and-vanilla-pytest.md`).
+The approach is explained in [ADR 0001](docs/architecture/decisions/0001-start-with-tdab-and-vanilla-pytest.md).
 
 ## Layout
 
@@ -54,8 +58,8 @@ The approach is explained in ADR 0001
   - `spec/tests/` — one pytest test per scenario.
   - `spec/tasks/<n>-<slug>/` — a task is a unit of agent work. Its
     `scene/` directory holds the canned workspace state after the
-    task completes. See ADR 0007 for the chain pattern.
-- `play/` — the in-repo embryo of `stagentic-play` (ADR 0001 §33).
+    task completes. See [ADR 0007](docs/architecture/decisions/0007-structure-inner-loop-scenarios-as-a-task-chain-with-a-scorecard.md) for the chain pattern.
+- `play/` — the in-repo embryo of `stagentic-play` ([ADR 0001](docs/architecture/decisions/0001-start-with-tdab-and-vanilla-pytest.md) §33).
   Framework code — `Agent`, `FakeAgent`, `ClaudeTranscriber`, `Auditor`, `Critic`,
   `ClaudeSession`, `ClaudeCli`, and `Inspector` — that scenarios reach via pytest fixtures. Is an
   installable package with its own pyproject.toml and unit-test suite, which
@@ -67,16 +71,16 @@ The approach is explained in ADR 0001
   *test* helpers (currently `matchers`) in `src/`, with its own tests and a
   permanent mutation gate. It is an installable package (hatchling) that `play`
   (and `spec`, when it needs them) consumes via an editable path source; there
-  is no shared workspace. See ADR 0012.
+  is no shared workspace. See [ADR 0012](docs/architecture/decisions/0012-adopt-path-source-packages-for-cross-project-code.md).
 - `experiments/` — spikes. `agentic-screenplay-spike/` prototypes a
   Screenplay-style DSL on pytest + `claude -p`; do **not** treat it as a
   target architecture.
-- `docs/architecture/decisions/` — ADRs. Append-only, one decision per
-  numbered file. Start from `TEMPLATE.md`.
-- `docs/assets/` — diagrams referenced from `README.md`.
+- [`docs/architecture/decisions/`](docs/architecture/decisions/) — ADRs. Append-only, one decision per
+  numbered file. Start from [`TEMPLATE.md`](docs/architecture/decisions/TEMPLATE.md).
+- [`docs/assets/`](docs/assets/) — diagrams referenced from [`README.md`](README.md).
 - `.claude/settings.json` — checked-in Claude Code config: shared
-  permissions, pinned model env vars (ADR 0003), and
-  `DISABLE_AUTOUPDATER` (ADR 0002).
+  permissions, pinned model env vars ([ADR 0003](docs/architecture/decisions/0003-pin-model-versions.md)), and
+  `DISABLE_AUTOUPDATER` ([ADR 0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md)).
 
 ## Working with `spec/`
 
@@ -98,9 +102,9 @@ Each `tasks/N-name/scene/` is also the starting fixture for task
 `N+1`; `0-placeholder/` is the genesis. Adding a scenario means adding
 the next task directory.
 
-See ADR 0007 for the task-chain rationale and the planned
+See [ADR 0007](docs/architecture/decisions/0007-structure-inner-loop-scenarios-as-a-task-chain-with-a-scorecard.md) for the task-chain rationale and the planned
 auditor → critic and fake → real agent swaps. See
-`docs/architecture/conventions/spec-conventions.md` for spec
+[`docs/architecture/conventions/spec-conventions.md`](docs/architecture/conventions/spec-conventions.md) for spec
 conventions (`transcript`, `working_dir`, scene projects).
 
 ## Relevant test suites
@@ -114,7 +118,7 @@ Bash calls in one message queue and run one-after-another, only
 `run_in_background` makes them truly parallel. Read each suite's output
 file when its completion notification arrives.
 
-Run each command verbatim as written in COMMANDS.md. Don't wrap it in
+Run each command verbatim as written in [COMMANDS.md](COMMANDS.md). Don't wrap it in
 shell redirects (`> file 2>&1`) or exit-code capture (`; echo "EXIT=$?"`)
 — `run_in_background` already streams each command's output to a file the
 notification points you to, so that scaffolding is redundant noise.
@@ -161,7 +165,7 @@ Then run the tests relevant to the change:
   then the full-set run over `source_paths` as the regression gate (clean, or
   every survivor a documented accepted-mutation). See
   [Mutation testing](COMMANDS.md#mutation-testing) for the commands and how to
-  read the result. ADR 0010; see [working-practices](docs/working-practices.md).
+  read the result. [ADR 0010](docs/architecture/decisions/0010-adopt-mutation-testing-with-a-staged-rollout.md); see [working-practices](docs/working-practices.md).
 
 A quick sanity check running just the test(s) that correspond to the
 changed production code file(s) is acceptable; call it a sanity check,
@@ -178,9 +182,9 @@ above require — run that afterwards.
   rather than linking out.
 - Statuses: `Proposed`, `Accepted`, `Rejected`, `Superseded`, `Deprecated`.
   New decisions start as `Proposed` and move to `Accepted` once validated.
-- When adding an ADR: copy `TEMPLATE.md` to `NNNN-short-slug.md` (next
+- When adding an ADR: copy [`TEMPLATE.md`](docs/architecture/decisions/TEMPLATE.md) to `NNNN-short-slug.md` (next
   number), fill it in, and add a row to the index in
-  `docs/architecture/decisions/README.md`.
+  [`docs/architecture/decisions/README.md`](docs/architecture/decisions/README.md).
 - **Keep `CLAUDE.md` in sync:** when adding an ADR or making a material
   change (code, structure, conventions, working agreements), re-read this
   `CLAUDE.md` and *propose changes* to any sections that have gone stale

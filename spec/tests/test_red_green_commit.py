@@ -22,14 +22,13 @@ class TestRedGreenCommit:
 
         assert_that(
             inspector.evaluate(
-                evidence_source=transcript,
-                workspace=working_dir,
                 task_to_evaluate=TASKS / task_name,
+                workspace=working_dir,
+                evidence_source=transcript,
                 should=_have_completed(
-                    task_name,
                     matching=[
                         "Production module exists at src/conversion.py with content",
-                        f"Workspace closely matches the scene structure for {task_name} (src, tests)",
+                        "Workspace closely matches the Reference scene",
                         "Production returns a literal value, and does not use a formula",
                         "Transcript shows the agent ran pytest",
                         "Transcript shows a FAILED pytest result",
@@ -47,7 +46,7 @@ def _set_opening_scene_for(task_name: str, working_dir: Path) -> None:
 
 # FULL SCORECARD MAPPING
 # Including optional programmatic Auditor lambdas (ignored by agentic Critic)
-def _have_completed(task_name, *, matching):
+def _have_completed(*, matching):
     table = {
         "Production module exists at src/conversion.py with content": {
             "verify": lambda transcript, target_dir, reference_scene: (
@@ -56,7 +55,7 @@ def _have_completed(task_name, *, matching):
             ),
             "failure": "src/conversion.py is missing or empty",
         },
-        f"Workspace closely matches the scene structure for {task_name} (src, tests)": {
+        "Workspace closely matches the Reference scene": {
             "verify": lambda transcript, target_dir, reference_scene: (
                 not _tree_diff(reference_scene, target_dir)
             ),

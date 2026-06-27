@@ -10,4 +10,6 @@ def current_timestamp():
 def archive(*, phase, tmp_path, test_name, artefacts_dir, timestamp):
     if phase != "call" or artefacts_dir is None or tmp_path is None:
         return
-    shutil.copytree(tmp_path, Path(artefacts_dir) / f"{timestamp}-{test_name}")
+    dest = Path(artefacts_dir) / f"{timestamp}-{test_name}"
+    shutil.copytree(tmp_path, dest)
+    return dest

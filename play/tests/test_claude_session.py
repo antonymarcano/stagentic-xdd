@@ -42,6 +42,7 @@ class TestClaudeSession:
             prompt=prompt,
             workspace=working_dir,
             session_id=_FAKE_SESSION_ID,
+            additional_dirs=(),
         )
         transcriber_spy.assert_called_once_with(
             jsonl_path=expected_jsonl_path,
@@ -63,7 +64,7 @@ class TestClaudeSession:
 
             claude_cli_spy.assert_called_once_with(
                 prompt="another prompt",
-                workspace=ANY, session_id=ANY,
+                workspace=ANY, session_id=ANY, additional_dirs=ANY,
             )
 
         def test_should_pass_the_working_dir(self, dummy):
@@ -79,7 +80,24 @@ class TestClaudeSession:
 
             claude_cli_spy.assert_called_once_with(
                 workspace=Path("/another/dir"),
-                prompt=ANY, session_id=ANY,
+                prompt=ANY, session_id=ANY, additional_dirs=ANY,
+            )
+
+        def test_should_pass_the_additional_dirs(self, dummy):
+            claude_cli_spy = MagicMock(spec=ClaudeCli())
+            scene = Path("/some/scene")
+
+            ClaudeSession(
+                claude=claude_cli_spy,
+                transcriber=dummy, home=dummy,
+            ).run(
+                additional_dirs=(scene,),
+                prompt=dummy, working_dir=dummy, transcript_path=dummy,
+            )
+
+            claude_cli_spy.assert_called_once_with(
+                additional_dirs=(scene,),
+                prompt=ANY, workspace=ANY, session_id=ANY,
             )
 
         @patch(
@@ -98,8 +116,8 @@ class TestClaudeSession:
 
             assert_that(claude_cli_spy.call_count, equal_to(2))
             claude_cli_spy.assert_has_calls([
-                call(prompt=dummy, workspace=dummy, session_id=_FAKE_SESSION_ID),
-                call(prompt=dummy, workspace=dummy, session_id=_ANOTHER_FAKE_SESSION_ID),
+                call(prompt=dummy, workspace=dummy, session_id=_FAKE_SESSION_ID, additional_dirs=()),
+                call(prompt=dummy, workspace=dummy, session_id=_ANOTHER_FAKE_SESSION_ID, additional_dirs=()),
             ], any_order=False)
 
         def test_should_return_the_result(self, dummy):

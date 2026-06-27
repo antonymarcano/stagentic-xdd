@@ -32,9 +32,9 @@ class TestAuditor:
             verify = MagicMock(return_value=False)
 
             result = Auditor().evaluate(
-                evidence_source=transcript,
-                workspace=working_dir,
                 task_to_evaluate=task_to_evaluate,
+                workspace=working_dir,
+                evidence_source=transcript,
                 should=[
                     {"characteristic": "my characteristic",
                      "verify": verify,
@@ -60,8 +60,7 @@ class TestAuditor:
                      "verify": lambda transcript, working_dir, reference_scene: False,
                      "failure": "third failure"},
                 ],
-                evidence_source=evidence_source, workspace=dummy_path,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, workspace=dummy_path, evidence_source=evidence_source,
             )
 
             assert_that(result, equal_to(Failure([
@@ -81,8 +80,7 @@ class TestAuditor:
                      "verify": lambda transcript, working_dir, reference_scene: True,
                      "failure": failure},
                 ],
-                evidence_source=evidence_source, workspace=dummy_path,
-                task_to_evaluate=task_to_evaluate,
+                task_to_evaluate=task_to_evaluate, workspace=dummy_path, evidence_source=evidence_source,
             )
 
             assert_that(result, equal_to(Success(ScorecardResults(
@@ -99,13 +97,12 @@ class TestAuditor:
 
             Auditor().evaluate(
                 evidence_source=transcript,
+                task_to_evaluate=task_to_evaluate, workspace=dummy_path,
                 should=[
                     {"characteristic": "captures input",
                      "verify": verify,
                      "failure": "n/a"},
                 ],
-                workspace=dummy_path,
-                task_to_evaluate=task_to_evaluate,
             )
 
             verify.assert_called_once_with(evidence_text, ANY, ANY)
@@ -116,13 +113,12 @@ class TestAuditor:
 
             Auditor().evaluate(
                 workspace=working_dir,
+                task_to_evaluate=task_to_evaluate, evidence_source=evidence_source,
                 should=[
                     {"characteristic": "captures input",
                      "verify": verify,
                      "failure": "n/a"},
                 ],
-                evidence_source=evidence_source,
-                task_to_evaluate=task_to_evaluate,
             )
 
             verify.assert_called_once_with(ANY, working_dir, ANY)
@@ -132,12 +128,12 @@ class TestAuditor:
 
             Auditor().evaluate(
                 task_to_evaluate=task_to_evaluate,
+                workspace=dummy_path, evidence_source=evidence_source,
                 should=[
                     {"characteristic": "captures input",
                      "verify": verify,
                      "failure": "n/a"},
                 ],
-                evidence_source=evidence_source, workspace=dummy_path,
             )
 
             verify.assert_called_once_with(ANY, ANY, task_to_evaluate / "scene")
@@ -146,10 +142,8 @@ class TestAuditor:
         def test_should_raise_when_the_scorecard_is_empty(self, dummy_path, task_to_evaluate):
             with pytest.raises(ValueError) as excinfo:
                 Auditor().evaluate(
-                    evidence_source=dummy_path,
-                    workspace=dummy_path,
-                    task_to_evaluate=task_to_evaluate,
                     should=[],
+                    task_to_evaluate=task_to_evaluate, workspace=dummy_path, evidence_source=dummy_path,
                 )
 
             assert_that(str(excinfo.value), equal_to("scorecard must not be empty"))
