@@ -56,15 +56,14 @@ uv run --directory spec pytest tests --inspector=critic --.artefacts-dir .artefa
 
 ### `spec/` scenarios with real agent (require `claude` CLI)
 
-> Not yet available — lands once the scenario passes with the real agent.
+The real agent is judged by the critic by default; pass `--inspector=auditor`
+to override.
 
 ```
 uv run --directory spec pytest tests --agent=real
 ```
 
 ### `spec/` scenarios with real agent, preserving artefacts (require `claude` CLI)
-
-> Not yet available — lands once the scenario passes with the real agent.
 
 ```
 uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
@@ -76,12 +75,12 @@ uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 uv run --directory spec pytest tests --inspector=critic
 ```
 
-### `spec/` scenarios with real agent and critic (require `claude` CLI)
+### `spec/` scenarios with real agent and auditor (require `claude` CLI)
 
-> Not yet available — lands once the scenario passes with the real agent.
+The real agent defaults to the critic; this opts back in to the auditor.
 
 ```
-uv run --directory spec pytest tests --agent=real --inspector=critic
+uv run --directory spec pytest tests --agent=real --inspector=auditor
 ```
 
 ## Mutation testing

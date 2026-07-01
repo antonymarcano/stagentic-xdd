@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from agent import Agent
 from archiver import archive, current_timestamp
 from auditor import Auditor
 from claude_cli import ClaudeCli
@@ -10,10 +11,12 @@ from critic import Critic
 from fake_agent import FakeAgent
 
 TASKS = Path(__file__).parent / "tasks"
+XDD_PLUGIN = Path(__file__).parent.parent / "xdd-plugin"
 
 
 def pytest_addoption(parser):
-    parser.addoption("--inspector", default="auditor", choices=["auditor", "critic"])
+    parser.addoption("--inspector", default=None, choices=["auditor", "critic"])
+    parser.addoption("--agent", default="fake", choices=["fake", "real"])
     parser.addoption("--.artefacts-dir", default=None)
 
 
@@ -31,7 +34,10 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture
 def inspector(request):
-    match request.config.getoption("--inspector"):
+    match _inspector_for(
+        agent=request.config.getoption("--agent"),
+        inspector=request.config.getoption("--inspector"),
+    ):
         case "auditor":
             return Auditor()
         case "critic":
@@ -43,6 +49,22 @@ def inspector(request):
             )
 
 
+def _inspector_for(*, agent: str, inspector: str | None) -> str:
+    if inspector is not None:
+        return inspector
+    return "critic" if agent == "real" else "auditor"
+
+
 @pytest.fixture
-def agent():
-    return FakeAgent(tasks_root=TASKS)
+def agent(request):
+    match request.config.getoption("--agent"):
+        case "fake":
+            return FakeAgent(tasks_root=TASKS)
+        case "real":
+            return Agent(
+                tasks_root=TASKS,
+                session=ClaudeSession(
+                    claude=ClaudeCli(plugin_dir=XDD_PLUGIN),
+                    transcriber=ClaudeTranscriber(),
+                    home=Path.home())
+            )

@@ -33,6 +33,7 @@ class TestRedGreenCommit:
                         "Transcript shows the agent ran pytest",
                         "Transcript shows a FAILED pytest result",
                         "Test fails comparing a return value, not on a missing module or symbol",
+                        "Transcript shows the failing test was written before the production code",
                     ],
                 ),
             ),
@@ -96,8 +97,22 @@ def _have_completed(*, matching):
             ),
             "failure": "assertion failed on a missing module or symbol, not on a return value that didn't match",
         },
+        "Transcript shows the failing test was written before the production code": {
+            "verify": lambda transcript, target_dir, reference_scene: (
+                _test_written_before_production(transcript)
+            ),
+            "failure": "the production code was written before the failing test, not after it",
+        },
     }
     return [{"characteristic": name, **table[name]} for name in matching]
+
+
+def _test_written_before_production(transcript: str) -> bool:
+    test_write = re.search(r"\[TOOL] \*\*Write\*\* `[^`]*tests/[^`]*\.py`", transcript)
+    prod_write = re.search(r"\[TOOL] \*\*Write\*\* `[^`]*src/[^`]*\.py`", transcript)
+    if test_write is None:
+        return False
+    return prod_write is None or test_write.start() < prod_write.start()
 
 
 def _returns_only_literals(source_path: Path) -> bool:

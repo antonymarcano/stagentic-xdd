@@ -6,7 +6,7 @@ agent-directive: |
 
 > **Portability:** Do not link to files outside this repository. Intra-repo links and external web URLs are fine. Inline context rather than linking out when the content is critical to understanding the ADR.
 
-# 0015 — Capture xdd-skill missteps as coaching records
+# 0015 — Capture xdd-skill missteps as lessons
 
 **Status:** Proposed
 
@@ -23,25 +23,24 @@ Today, once the scenario passes, the durable traces are the committed artifacts 
 
 ## Decision
 
-Record a **coaching record** for each distinct BDD/TDD misstep a coding agent makes under the xdd skill.
+Record a **lesson** for each distinct BDD/TDD misstep a coding agent makes under the xdd skill.
 
-1. **Scope is the xdd skill only** — a record is a lesson in BDD/TDD applied during a coding exercise.
+1. **Scope is the xdd skill only** — each lesson captures BDD/TDD discipline applied during a coding exercise.
 
-2. **One record per principle.** A single failed scenario may surface several distinct missteps; each is its own record (e.g. "stopped at an import-error red" and "wrote a formula where a literal was demanded" are separate lessons).
+2. **One lesson per principle.** A single failed scenario may surface several distinct missteps; each is its own lesson (e.g. "stopped at an import-error red" and "wrote a formula where a literal was demanded" are separate lessons).
 
-3. **Location and naming:** `docs/coaching/<date-time>-<slug>.md`.
+3. **Location and naming:** `docs/lessons/<date-time>-<slug>/` — a directory holding the lesson write-up (`lesson.md`) and the preserved run artefact (transcript, critique, and workspace source; transient trees such as `.venv` are excluded).
 
-4. **Written as we go.** The record drives the work; it is not a post-hoc write-up. It is committed **on green**, bundled with the guidance change(s) that resolved the misstep. Because a series of corrections may be needed, several records and the final change can land together in that green commit.
+4. **Written as we go.** The lesson drives the work; it is not a post-hoc write-up. It is committed **on green**, bundled with the guidance change(s) that resolved the misstep. Because a series of corrections may be needed, several lessons and the final change can land together in that green commit.
 
-5. **One-way link integrity.** A record may link to the task that produced it. The task must **never** link to a record. The task directory is the agent's working fixture (ADR [0007](0007-structure-inner-loop-scenarios-as-a-task-chain-with-a-scorecard.md)); anything in it that points at a lesson would coach the agent under test and compromise the behaviour being measured.
+5. **One-way link integrity.** A lesson may link to the task that produced it. The task must **never** link to a lesson. The task directory is the agent's working fixture (ADR [0007](0007-structure-inner-loop-scenarios-as-a-task-chain-with-a-scorecard.md)); anything in it that points at a lesson would coach the agent under test and compromise the behaviour being measured.
 
-6. **Each record carries:**
+6. **Each lesson carries:**
    - **Task** — the coding exercise.
-   - **Misstep** — what the agent did, captured as its **actual manifestation**: the verbatim transcript or output evidence from the run, not a paraphrase. The committed green state preserves only the corrected behaviour, so this evidence survives nowhere else.
-   - **Model(s)** — the model(s) the misstep was seen in, and the model(s) the corrective guidance was validated under.
-   - **Why it's wrong** — the reasoning, distilled from the coaching dialogue.
-   - **The correct step** — what should have happened.
-   - **Coaching dialogue** — the actual exchange that corrected the misstep, verbatim (not a paraphrase). It records what it took to get the agent to re-articulate the correct behaviour, and — like the misstep manifestation — is lost once the session is gone.
+   - **Misstep** — what the agent did, in brief, with the single most telling line. The full manifestation is the preserved run artefact co-located in the lesson directory (§3), which the lesson links to for the full evidence.
+   - **Config(s)** — the configuration the misstep was seen in, and the configuration the corrective guidance was validated under: the model (with context window), the reasoning effort, and the CLI version.
+   - **Evidence** — the critic's verdict as a trimmed scorecard, linking the preserved `critique.md` for the full critique.
+   - **Review** — the corrective feedback on the misstep, authored together by the coach and a context-aware agent and composed from the transcript after the run. It anchors in the agent's stated rationale, names why that reasoning stopped short, and gives the correct step. Where more than one disciplined path reaches the same end-state, it lists the acceptable alternatives; the invariant is the end-state, not the path. Write it while the reasoning is fresh — it is lost once the session is gone.
    - **Experiments** — the guidance/guardrail/gateway mechanisms (ADR [0004](0004-structure-agent-control-with-guidance-guardrails-and-gateways.md)) tried to correct it, and which individual choice or combination won and why.
    - **Guidance change** — the change that resolved it (which file, what was added or removed).
    - **Lesson name** — the underlying principle, not the mechanical fix.
@@ -50,14 +49,14 @@ Record a **coaching record** for each distinct BDD/TDD misstep a coding agent ma
 
 - Every guidance line — every prohibition — gains provenance: the concrete misstep it defends against and what it took to correct. A later editor can see what a clause holds back before removing it.
 - The corpus becomes the source material for the overseeing agent: its checks and its agentic scenarios are seeded from recorded missteps and their detection signatures.
-- The model field makes the model-specificity of a misstep, or of its fix, visible, and ties the catalogue to the pinned-model regime (ADR [0003](0003-pin-model-versions.md)).
+- The config field makes the model-, effort-, and context-specificity of a misstep, or of its fix, visible, and ties the catalogue to the pinned-version regime (ADR [0003](0003-pin-model-versions.md)).
 - The experiment trail teaches which guidance approach suits which class of misstep — for example, prohibitions piling up in prose around one decision is a signal to try a Promptbook diagram.
-- Writing as we go captures the real dialogue and the misstep's actual manifestation — both ephemeral. The manifestation comes from a non-deterministic run, so if it isn't lifted into the record before green, the run that produced it is unrecoverable. A series of corrections then lands together in one green commit.
+- Writing as we go captures the review while the reasoning is fresh, and copies the run artefact before the tmp workspace is cleaned — both ephemeral. The manifestation comes from a non-deterministic run, so if the artefact isn't copied (and the review written) before green, the run that produced it is unrecoverable. A series of corrections then lands together in one green commit.
 - The one-way link rule protects test integrity at the cost of discoverability from the task side: a reader on the task cannot navigate to its lessons, by design.
-- Adds work to each corrective cycle. The 'coaching' dialogue happens anyway so only adds a small overhead in logging the dialogue, test results and experiments.
+- Adds work to each corrective cycle. The review happens anyway, so it only adds a small overhead in logging the feedback, test results and experiments.
 
 ## Alternatives considered
 
 - **One record per scenario** instead of per principle: fewer files, but bundles unrelated lessons, blunting reuse and making the overseer's source material harder to lift out one principle at a time.
-- **Write the record after green**, as a write-up: rejected because the record is meant to drive the work; written after the fact it reconstructs the dialogue rather than capturing it, and loses the corrections that did not survive to green.
+- **Write the lesson after green**, as a write-up: rejected because the lesson is meant to drive the work; written after the fact it reconstructs the review rather than capturing it, and loses the corrections that did not survive to green.
 - **Record only the final guidance diff**, not the experiments: rejected because the failed approaches and the reason the winner won are the most reusable part when choosing a guidance mechanism for the next misstep.

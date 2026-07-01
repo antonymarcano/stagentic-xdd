@@ -109,6 +109,24 @@ class TestClaudeCli:
                 cwd=ANY, capture_output=ANY, text=ANY,
             )
 
+        def test_should_add_the_plugin_dir(self, tmp_path, subprocess_that_succeeds):
+            plugin = tmp_path / "plugin"
+
+            ClaudeCli(runner=subprocess_that_succeeds, plugin_dir=plugin)(
+                "any prompt",
+                workspace=tmp_path,
+                session_id="any session id",
+            )
+
+            subprocess_that_succeeds.assert_called_once_with(
+                ["claude", "-p", "any prompt",
+                 "--permission-mode", "acceptEdits",
+                 "--session-id", "any session id",
+                 "--add-dir", str(tmp_path),
+                 "--plugin-dir", str(plugin)],
+                cwd=ANY, capture_output=ANY, text=ANY,
+            )
+
     class TestErrors:
         # noinspection PyArgumentList
         # - because we're protecting against changes that make it optional.

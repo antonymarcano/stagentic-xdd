@@ -1,49 +1,65 @@
 # NEXT
 
-> Do not reference this file in commit messages. NEXT.md tracks the
-> immediate next step and is rewritten as work lands; a commit that
-> points at NEXT.md rots the moment the file changes.
+> Do not reference this file in commit messages except those about this file itself.
+> NEXT.md tracks the immediate next step and is rewritten as work lands (without 
+> any mention of what was just completed.
 
-## 1. Drive `test_red_green_commit` to a passing state with the real agent
+## 1. Green step of the red_green_commit scenario
 
-The real-agent path is wired (`--agent=real` in `spec/conftest.py`, held
-uncommitted). On the current CLI (**2.1.191**) the workspace-trust gate ADR
-[0016](docs/architecture/decisions/0016-trust-the-agent-workspace-for-headless-runs.md)
-addresses is **absent**, so a fresh tmp workspace's `permissions.allow` already
-applies — the real agent can run `uv run pytest`. The scenario's only missing
-piece is the **xdd skill** that steers the agent's Red-Green-Refactor behaviour;
-without it the run fails as a *correct* agent-behaviour failure.
+The scenario covers only the red beat (`test_write_a_failing_test`). Add the
+green beat — a task whose scene is task 1's end-state (failing test + stub),
+with the agent driven to make the failing test pass and scored by the
+scorecard. Surface and correct any misstep per ADRs 0015/0018, as with red.
 
-The target is the `test_write_a_failing_test` scorecard: a failing test that
-imports from `conversion`, a **literal-returning** stub `src/conversion.py` so
-the test fails at an **assertion** (not import), the agent running pytest, and a
-FAILED result.
+## 2. Contract-test ClaudeCli's options
 
-Do these in order:
+`ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
+`--plugin-dir` to real claude, but only a bare prompt is contract-tested
+(`play/tests/contract/test_claude_cli.py`). Add one contract test per option,
+verifying it does what we expect against the real CLI, one at a time.
 
-1. **Run the real-agent scenario, preserving artefacts** —
-   `uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts`
-   — to see the current correct failure and keep its critique.
-2. **Record the misstep as a coaching record** (ADR
-   [0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-coaching-records.md))
-   from the preserved critique.
-3. **Write the xdd skill (§4)** and iterate until the scenario passes: steer the
-   agent to replace the placeholder test with a failing test importing from
-   `conversion`, create the literal-returning stub `src/conversion.py`, run
-   `uv run pytest`, and confirm `FAILED`.
-4. **When green, commit the held items:** the real-agent wiring
-   (`spec/conftest.py`, `COMMANDS.md`), `TASK.md`, and
-   `0-placeholder/scene/.claude/settings.json` together; the coaching-process
-   docs (ADR 0015, `docs/coaching/`, and the ADR 0001/0004 + `CLAUDE.md`
-   updates) as their own commit.
-
-**Deferred — versions / CLI upgrade.** ADR
-[0016](docs/architecture/decisions/0016-trust-the-agent-workspace-for-headless-runs.md)
-(trust the workspace) and the move to 2.1.195 aren't needed on 2.1.191 — the
-gate is absent. Pick them up after the scenario passes; the trust marking
+**Deferred — versions / CLI upgrade.** ADR 0016 (trust the workspace) and the
+move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 2. Improvement plan working approach
+## 3. Pin and record reasoning effort and the context window
+
+ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
+(Proposed): a run transcript records the CLI version and model (ADR
+[0017](docs/architecture/decisions/0017-record-cli-version-and-model-in-the-run-transcript.md)),
+but not the **reasoning effort** or the **context window** a run used — both bear
+on a lesson's provenance (ADR
+[0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md)).
+What was learned while capturing the first lesson:
+
+- The harness runs resolve to `claude-opus-4-8[1m]` — the **1M context** variant
+  (Opus 4.8 maps to 1M by default). The header's source, `message.model`, records
+  the API id `claude-opus-4-8`, dropping the `[1m]`; the `[1m]` form is visible
+  only in the `system/init` event's `model`.
+- The harness passes no `--effort`, so runs use the CLI **default (high** for
+  Opus 4.8**)**. Effort is absent from both the session JSONL and the
+  `system/init` event, so it can only be recorded as the value the harness sets.
+
+Two pieces of work, each TDD in `play/`:
+
+1. **Pin effort.** Add a `--effort` flag to the harness's `claude -p` invocation
+   (`play/src/claude_cli.py`), pinned to **high** — the current Opus 4.8 default,
+   so this locks in the behaviour the first lessons were captured under rather
+   than changing it. Effort levels are **model-dependent** (Opus 4.8/4.7:
+   `low|medium|high|xhigh|max`; Opus 4.6, Sonnet 4.6: `low|medium|high|max`;
+   Haiku 4.5: no documented effort support), so the flag must be **gated on the
+   resolved model** — never pass `--effort` to a model that does not support it
+   (it would fail the run). `ClaudeCli` therefore needs to know which model it is
+   invoking, or which models support the chosen level.
+2. **Record effort + context.** Extend the versions header (ADR 0017) so the
+   transcript records the effort the harness set and the resolved context window
+   (the `[1m]` form from the `system/init` event, not the per-message
+   `message.model`).
+
+Then backfill the captured lessons' metadata from the recorded values rather than
+from this investigation.
+
+## 4. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -126,9 +142,9 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 3. Improvement plan
+## 5. Improvement plan
 
-> Paused — do the §1 walkthrough first.
+> Paused — do §1 first.
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -235,37 +251,6 @@ A candidate convention to start from — every public entry point to the
   found, network unavailable).
 
 This may become the standard for all files.
-
-## 4. Write the xdd skill
-
-The `play/` harness is committed: `Agent`, `ClaudeTranscriber`, and JSONL path
-computation are in `play/src/`. The `spec/conftest.py` wiring that exposes
-`--agent=real` is in place but held uncommitted until the scenario passes (§1).
-
-A first draft of the scenario's task,
-`spec/tasks/1-first-test-for-miles-to-km-converter/TASK.md`, already exists in
-the working tree but is deliberately left **untracked**. It lands with the
-commit below (alongside `spec/conftest.py` and
-`0-placeholder/scene/.claude/settings.json`) once the scenario passes (§1) —
-not before.
-
-The real run (§1) is a correct failure — the agent lacks the guidance a skill
-would provide.
-
-The workspace already has `spec/tasks/0-placeholder/scene/.claude/settings.json`
-allowing `Bash(uv run pytest*)`, so the agent can run tests once the skill
-steers it correctly.
-
-The skill needs to guide the agent to:
-1. Replace the placeholder test with a failing test that imports from `conversion`.
-2. Create a stub `src/conversion.py` so the test fails at assertion (not import).
-3. Run `uv run pytest` and confirm the result is `FAILED`.
-
-Once `--agent=real` is green:
-- Add integration tests for the real-agent path one at a time.
-  *(cf. `ea7b497`)*
-- Commit `spec/conftest.py`, `TASK.md`, and
-  `0-placeholder/scene/.claude/settings.json` together.
 
 ## Future options
 

@@ -35,10 +35,10 @@ Read these thoroughly when relevant; don't rely on the one-line summary alone:
 - [`docs/working-practices.md`](docs/working-practices.md) — workflow practices: lead with the
   proposed commit; separate behavioural from structural changes.
   Read it at session start, alongside NEXT.md.
-- [`docs/coaching/`](docs/coaching/) — agent-coaching records: per-misstep
-  BDD/TDD lessons captured while developing the xdd skill. The process is
-  defined in [ADR 0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-coaching-records.md);
-  [`TEMPLATE.md`](docs/coaching/TEMPLATE.md) is the record shape. When a
+- [`docs/lessons/`](docs/lessons/) — lessons: per-misstep BDD/TDD lessons
+  captured while developing the xdd skill. The process is
+  defined in [ADR 0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md);
+  [`TEMPLATE.md`](docs/lessons/TEMPLATE.md) is the lesson shape. When a
   real-agent run reveals a misstep, record it per the ADR.
 
 NEXT.md is not a backlog. When a step from it lands, propose updating

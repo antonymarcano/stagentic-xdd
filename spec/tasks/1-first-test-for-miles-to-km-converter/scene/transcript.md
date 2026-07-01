@@ -1,3 +1,7 @@
+[TOOL] **Write** `tests/test_conversion.py`
+
+[TOOL] **Write** `src/conversion.py`
+
 [TOOL] **Bash** `uv run pytest tests/`
 
 ```

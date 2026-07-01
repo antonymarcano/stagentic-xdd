@@ -21,9 +21,8 @@ class TestArchiver:
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
-        archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
+        dest = archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
-        dest = artefacts_dir / "20260527-101638-test_foo"
         assert (dest / "transcript.md").read_text() == "some content"
 
     def test_archive_returns_the_destination_it_wrote(self, tmp_path):
@@ -35,7 +34,38 @@ class TestArchiver:
 
         dest = archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
-        assert dest == artefacts_dir / "20260527-101638-test_foo"
+        assert dest.parent == artefacts_dir
+        assert dest.name.startswith("20260527-101638-test_foo")
+
+    def test_should_use_a_short_uuid_suffix(self, tmp_path):
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        artefacts_dir = tmp_path / ".artefacts"
+        artefacts_dir.mkdir()
+
+        dest = archive(phase="call", tmp_path=workspace, test_name="test_foo",
+                       artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
+
+        suffix = dest.name.rsplit("-", 1)[-1]
+        assert re.fullmatch(r"[0-9a-f]{8}", suffix)
+
+    def test_archive_does_not_collide_for_same_timestamp_and_test_name(self, tmp_path):
+        artefacts_dir = tmp_path / ".artefacts"
+        artefacts_dir.mkdir()
+
+        def workspace_named(name):
+            ws = tmp_path / name
+            ws.mkdir()
+            (ws / "transcript.md").write_text(name)
+            return ws
+
+        first = archive(phase="call", tmp_path=workspace_named("run-a"), test_name="test_foo",
+                        artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
+        second = archive(phase="call", tmp_path=workspace_named("run-b"), test_name="test_foo",
+                         artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
+
+        assert first != second
+        assert first.exists() and second.exists()
 
     def test_archive_does_nothing_outside_call_phase(self, tmp_path):
         workspace = tmp_path / "workspace"
