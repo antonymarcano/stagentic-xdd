@@ -20,6 +20,15 @@ def pytest_addoption(parser):
     parser.addoption("--.artefacts-dir", default=None)
 
 
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--agent") == "real":
+        return
+    skip = pytest.mark.skip(reason="scenario runs only under --agent=real")
+    for item in items:
+        if "real_agent" in item.keywords:
+            item.add_marker(skip)
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     yield

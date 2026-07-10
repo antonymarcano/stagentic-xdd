@@ -4,14 +4,34 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Green step of the red_green_commit scenario
+## 1. Capture code-change diffs in the run transcript
 
-The scenario covers only the red beat (`test_write_a_failing_test`). Add the
-green beat — a task whose scene is task 1's end-state (failing test + stub),
-with the agent driven to make the failing test pass and scored by the
-scorecard. Surface and correct any misstep per ADRs 0015/0018, as with red.
+The captured `transcript.md` (produced by `ClaudeTranscriber`) renders an Edit or
+Write tool use as only its `file_path` — the changed lines never appear — so what
+the agent actually changed is invisible. A reviewer or critic reading the
+transcript can't see the diff the live session shows.
 
-## 2. Contract-test ClaudeCli's options
+Make code changes visible: for a Write, render the content it writes; for an Edit,
+render the before/after (`old_string` → `new_string`) as a diff. The JSONL already
+carries the full tool input, so the data is there. TDD in `play`
+(`claude_transcriber.py`) — extend the current transcriber, which produces today's
+transcripts, rather than waiting on the ground-up rewrite in ADR 0014.
+
+## 2. N× batch gateway — run a scenario Nx and tally (belongs in play)
+
+Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
+scenario many times and tallying per-run outcomes. This is currently hand-rolled
+as an ad-hoc bash loop over `pytest … --agent=real`, rewritten each time, with
+grep-based extraction of the signals (did the skill load; literal vs formula).
+
+Make it a first-class mechanism in **play** — framework work, not a spec helper or
+a shell loop (cf. "Review later: move scene management to play"). Run a named
+scenario N times with capped concurrency and return a per-run tally and pass-rate.
+Per run, capture the pytest result plus the scenario's signals (skill loaded; the
+production shape). This makes experiments (baseline vs B, gateway variants)
+reproducible rather than one-off.
+
+## 3. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
@@ -22,7 +42,7 @@ verifying it does what we expect against the real CLI, one at a time.
 move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 3. Pin and record reasoning effort and the context window
+## 4. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -59,7 +79,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 4. Improvement plan working approach
+## 5. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -142,9 +162,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 5. Improvement plan
-
-> Paused — do §1 first.
+## 6. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -273,6 +291,19 @@ This may become the standard for all files.
 - The agent's cwd must be the workspace root for `uv run pytest` to
   resolve correctly.
 
+## Very low priority: archive copytree races under parallel runs
+
+`archive` (`play/src/archiver.py`) does an unfiltered `shutil.copytree` of the
+whole agent workspace — including transient `.venv/`, `__pycache__/`,
+`.pytest_cache/`. Under parallel batch runs, a file it has listed can change or
+vanish mid-copy, so `copytree` raises. Because that raise happens in the
+`pytest_runtest_makereport` hook (after the assertion already passed), pytest
+fails the *process* even though the scenario succeeded — a spurious `pytest=FAIL`
+on a run whose scorecard is all-PASS (seen ~2/30 at 10-way concurrency; isolated
+runs are clean). Fix: give the copytree `ignore_patterns('.venv', '__pycache__',
+'.pytest_cache')` (mirrors `_set_opening_scene_for`), TDD'd in `play/`. Relates to
+the transient-artefacts known constraint above.
+
 ## Enforcing working-practices via hooks
 
 This began as a way to make the dev process less painful. It became more
@@ -349,3 +380,26 @@ If we do build the gate, two questions are open:
 the session. String matchers can be dodged by spelling things differently.
 Judgement clauses can't be encoded. So the hooks back up the mechanical
 steps only — they don't remove the agent's job of applying the doc.
+
+## Review later: consider a delta from scene to scene
+
+Each task's `scene/` is a full copy of the workspace end-state and also the
+opening scene for the next task, so consecutive scenes duplicate most files
+verbatim — building task 2's scene copies task 1's `pyproject.toml`, tests,
+`.claude/settings.json`, and `uv.lock` unchanged, and only `src/conversion.py`
+differs.
+
+Consider holding each scene as a delta — only the files that changed from the
+previous scene. A full scene is then materialised by copying the scenes in
+order, each later scene's files layered over what is already there. This
+applies to both roles a scene plays: the start (opening) scene for the next
+task, and the reference (end-state) scene the critic judges against.
+
+## Review later: move scene management to play
+
+Scene setup currently lives in the spec test helper `_set_opening_scene_for`
+(copying the previous scene into the workspace, filtering the previous task's
+outputs like `transcript.md`). Materialising a scene, deciding what carries
+into an opening scene, and the delta-from-scene idea above are framework work —
+they belong in `play/`, not in a spec test helper. Move scene management into
+`play/` so scenarios call it rather than reimplement it.

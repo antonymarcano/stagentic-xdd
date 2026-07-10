@@ -3,6 +3,7 @@ import re
 import shutil
 from pathlib import Path
 
+import pytest
 from hamcrest import assert_that
 from result_matchers import is_a_success
 
@@ -27,6 +28,7 @@ class TestRedGreenCommit:
                 evidence_source=transcript,
                 should=_have_completed(
                     matching=[
+                        "Transcript shows the agent invoked the xdd skill",
                         "Production module exists at src/conversion.py with content",
                         "Workspace closely matches the Reference scene",
                         "Production returns a literal value, and does not use a formula",
@@ -40,9 +42,43 @@ class TestRedGreenCommit:
             is_a_success(),
         )
 
+    @pytest.mark.real_agent
+    def test_make_the_failing_test_pass(self, tmp_path, agent, inspector):
+        working_dir = tmp_path / "miles-to-km"
+        _set_opening_scene_for("1-first-test-for-miles-to-km-converter", working_dir)
+        task_name = "2-make-the-failing-test-pass"
+
+        transcript = agent.perform(
+            task=task_name,
+            working_dir=working_dir
+        ).value
+
+        assert_that(
+            inspector.evaluate(
+                task_to_evaluate=TASKS / task_name,
+                workspace=working_dir,
+                evidence_source=transcript,
+                should=_have_completed(
+                    matching=[
+                        "Transcript shows the agent invoked the xdd skill",
+                        "Production module exists at src/conversion.py with content",
+                        "Workspace closely matches the Reference scene",
+                        "Production returns a literal value, and does not use a formula",
+                        "Transcript shows the agent ran pytest",
+                        "Transcript shows a PASSED pytest result",
+                    ],
+                ),
+            ),
+            is_a_success(),
+        )
+
 
 def _set_opening_scene_for(task_name: str, working_dir: Path) -> None:
-    shutil.copytree(TASKS / task_name / "scene", working_dir)
+    shutil.copytree(
+        TASKS / task_name / "scene",
+        working_dir,
+        ignore=shutil.ignore_patterns("transcript.md"),
+    )
 
 
 # FULL SCORECARD MAPPING
@@ -82,6 +118,14 @@ def _have_completed(*, matching):
             ),
             "failure": "transcript shows no FAILED result from pytest",
         },
+        "Transcript shows a PASSED pytest result": {
+            "verify": lambda transcript, target_dir, reference_scene: bool(
+                re.search(
+                    r"\[TOOL] \*\*Bash\*\*.*?pytest.*?passed", transcript, re.DOTALL
+                )
+            ),
+            "failure": "transcript shows no passing result from pytest",
+        },
         "Test fails comparing a return value, not on a missing module or symbol": {
             "verify": lambda transcript, target_dir, reference_scene: (
                 bool(
@@ -102,6 +146,12 @@ def _have_completed(*, matching):
                 _test_written_before_production(transcript)
             ),
             "failure": "the production code was written before the failing test, not after it",
+        },
+        "Transcript shows the agent invoked the xdd skill": {
+            "verify": lambda transcript, target_dir, reference_scene: bool(
+                re.search(r"Launching skill: xdd", transcript)
+            ),
+            "failure": "transcript shows the xdd skill was not invoked",
         },
     }
     return [{"characteristic": name, **table[name]} for name in matching]

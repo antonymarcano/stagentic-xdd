@@ -17,6 +17,10 @@ See [0000](0000-use-adrs-to-record-decisions.md) for more on ADRs, the rationale
 3. Set status to `Proposed`.
 4. Add a row in the index below.
 
+Supporting evidence or artefacts may live in a companion folder named after the
+ADR's slug — `NNNN-short-slug/` — beside the ADR file, linked from the ADR's
+Evidence (e.g. `0020-drive-skill-invocation-from-the-frontmatter-description/`).
+
 ## Index
 
 | # | Title | Status |
@@ -41,3 +45,4 @@ See [0000](0000-use-adrs-to-record-decisions.md) for more on ADRs, the rationale
 | [0017](0017-record-cli-version-and-model-in-the-run-transcript.md) | Record the resolved CLI version and model in the run transcript | Accepted |
 | [0018](0018-build-the-xdd-skill-as-a-corrective-skill.md) | Build the xdd skill as a Corrective Skill | Proposed |
 | [0019](0019-pin-and-record-reasoning-effort-and-context-window.md) | Pin and record reasoning effort and the context window | Proposed |
+| [0020](0020-drive-skill-invocation-from-the-frontmatter-description.md) | Drive skill invocation from the frontmatter description | Accepted |

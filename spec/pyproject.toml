@@ -42,3 +42,6 @@ extend-select = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+markers = [
+    "real_agent: scenario runs only under --agent=real (and its critic); skipped under the fake agent",
+]

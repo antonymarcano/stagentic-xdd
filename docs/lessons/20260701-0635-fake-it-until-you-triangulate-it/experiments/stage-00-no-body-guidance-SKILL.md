@@ -14,7 +14,3 @@ The test should always be written before the production code that makes it pass.
 
 A test fails for the right reason when it has an assertion failure where the actual
 result is not matching the expected result.
-
-# Making a test pass
-
-Make a failing test pass using 'Fake-It'.

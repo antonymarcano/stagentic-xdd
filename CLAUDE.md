@@ -76,7 +76,8 @@ The approach is explained in [ADR 0001](docs/architecture/decisions/0001-start-w
   Screenplay-style DSL on pytest + `claude -p`; do **not** treat it as a
   target architecture.
 - [`docs/architecture/decisions/`](docs/architecture/decisions/) — ADRs. Append-only, one decision per
-  numbered file. Start from [`TEMPLATE.md`](docs/architecture/decisions/TEMPLATE.md).
+  numbered file; a decision may add a companion folder named after its slug
+  (`NNNN-slug/`) for supporting evidence. Start from [`TEMPLATE.md`](docs/architecture/decisions/TEMPLATE.md).
 - [`docs/assets/`](docs/assets/) — diagrams referenced from [`README.md`](README.md).
 - `.claude/settings.json` — checked-in Claude Code config: shared
   permissions, pinned model env vars ([ADR 0003](docs/architecture/decisions/0003-pin-model-versions.md)), and
@@ -106,6 +107,15 @@ See [ADR 0007](docs/architecture/decisions/0007-structure-inner-loop-scenarios-a
 auditor → critic and fake → real agent swaps. See
 [`docs/architecture/conventions/spec-conventions.md`](docs/architecture/conventions/spec-conventions.md) for spec
 conventions (`transcript`, `working_dir`, scene projects).
+
+### Run artefacts
+
+Scenario run artefacts go in `spec/.artefacts/` (gitignored via `**/.artefacts`).
+Pass `--.artefacts-dir` a path **relative** to the spec project — the
+[COMMANDS.md](COMMANDS.md) examples use `.artefacts`, which lands under `spec/`
+because `uv run --directory spec` runs there. Do **not** pass an absolute
+repo-root path (e.g. `/workspace/stagentic-xdd/.artefacts`) — it scatters
+artefacts at the repo root instead of `spec/.artefacts`.
 
 ## Relevant test suites
 

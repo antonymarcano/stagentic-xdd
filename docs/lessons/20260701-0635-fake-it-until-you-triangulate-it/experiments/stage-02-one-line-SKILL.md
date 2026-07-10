@@ -17,4 +17,4 @@ result is not matching the expected result.
 
 # Making a test pass
 
-Make a failing test pass using 'Fake-It'.
+Make a failing test pass using 'Fake-It' with 'Triangulation'; do not use 'Obvious Implementation'.
