@@ -110,6 +110,14 @@ drwxr-xr-x 2 dev dev 4096 May 27 05:43 __pycache__
 
 `06:05:20Z` **[TOOL USE]** Write `/tmp/pytest-of-dev/pytest-209/test_write_a_failing_test0/miles-to-km/tests/test_conversion.py`
 
+```
+from conversion import miles_to_km
+
+
+def test_one_mile_is_1_609_km():
+    assert miles_to_km(1) == 1.609
+```
+
 `06:05:20Z` **[TOOL RESULT]**
 
 ```

@@ -20,6 +20,13 @@ def pytest_addoption(parser):
     parser.addoption("--.artefacts-dir", default=None)
 
 
+def pytest_configure(config):
+    _reject_incompatible_inspector(
+        agent=config.getoption("--agent"),
+        inspector=config.getoption("--inspector"),
+    )
+
+
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--agent") == "real":
         return
@@ -62,6 +69,14 @@ def _inspector_for(*, agent: str, inspector: str | None) -> str:
     if inspector is not None:
         return inspector
     return "critic" if agent == "real" else "auditor"
+
+
+def _reject_incompatible_inspector(*, agent: str, inspector: str | None) -> None:
+    if agent == "real" and inspector == "auditor":
+        raise pytest.UsageError(
+            "the auditor can only evaluate deterministic results, so it cannot "
+            "judge the real agent; use --inspector=critic (the default)"
+        )
 
 
 @pytest.fixture

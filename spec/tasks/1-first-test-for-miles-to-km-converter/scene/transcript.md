@@ -21,11 +21,11 @@ ______________________ test_one_mile_is_about_1_60934_km _______________________
 
     def test_one_mile_is_about_1_60934_km():
 >       assert miles_to_km(1) == 1.60934
-E       assert 0 == 1.60934
-E        +  where 0 = miles_to_km(1)
+E       assert 0.0 == 1.60934
+E        +  where 0.0 = miles_to_km(1)
 
 tests/test_conversion.py:5: AssertionError
 =========================== short test summary info ============================
-FAILED tests/test_conversion.py::test_one_mile_is_about_1_60934_km - assert 0 == 1.60934
+FAILED tests/test_conversion.py::test_one_mile_is_about_1_60934_km - assert 0.0 == 1.60934
 ============================== 1 failed in 0.01s ===============================
 ```

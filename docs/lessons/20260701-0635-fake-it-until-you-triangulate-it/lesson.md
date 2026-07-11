@@ -2,6 +2,7 @@
 
 - **Date-time:** 2026-07-01T06:35Z
 - **Task:** [2-make-the-failing-test-pass](../../../spec/tasks/2-make-the-failing-test-pass)
+- **Scenario:** [`test_make_the_failing_test_pass`](../../../spec/tests/test_red_green_commit.py) — the spec test whose scorecard revealed the misstep
 - **Config(s) seen in:**
   - Model: claude-opus-4-8[1m] (1M context window)
   - Reasoning effort: CLI default (high for Opus 4.8), not explicitly set

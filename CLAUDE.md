@@ -108,6 +108,13 @@ auditor → critic and fake → real agent swaps. See
 [`docs/architecture/conventions/spec-conventions.md`](docs/architecture/conventions/spec-conventions.md) for spec
 conventions (`transcript`, `working_dir`, scene projects).
 
+### Parallel by default
+
+Spec scenarios run in parallel via pytest-xdist — `spec/pyproject.toml` sets
+`addopts = ["-n", "auto"]`, so every `spec` command distributes scenarios across
+workers. Append `-n0` to run serially (to debug, or read un-interleaved output).
+See [COMMANDS.md](COMMANDS.md#tests).
+
 ### Run artefacts
 
 Scenario run artefacts go in `spec/.artefacts/` (gitignored via `**/.artefacts`).
@@ -123,7 +130,7 @@ artefacts at the repo root instead of `spec/.artefacts`.
 
 Default suite. Run at the start of every new session, and any time the
 "Change in `play/` beyond a single test file" rule applies. Launch all
-five with `run_in_background: true` in a single message — foreground
+six with `run_in_background: true` in a single message — foreground
 Bash calls in one message queue and run one-after-another, only
 `run_in_background` makes them truly parallel. Read each suite's output
 file when its completion notification arrives.
@@ -143,7 +150,12 @@ file as its notification lands.
 - [`test_utilities/` tests](COMMANDS.md#test_utilities-tests) — fast; no claude CLI
 - [`spec/` scenarios](COMMANDS.md#spec-scenarios) — fake agent, auditor (default)
 - [`spec/` scenarios with critic](COMMANDS.md#spec-scenarios-with-critic-require-claude-cli) — fake agent, real critic
-- Real agent excluded while the xdd skill is in development.
+- [`spec/` scenarios with real agent](COMMANDS.md#spec-scenarios-with-real-agent-require-claude-cli) — real agent, real critic
+
+Each spec config runs its scenarios in parallel (xdist, `-n auto`), so the three
+spec configs — real agent included — together finish in roughly one scenario's
+wall-clock. The real-agent config is part of the baseline, so anything the
+baseline gates is exercised end-to-end on the live pipeline before commit.
 
 ### Before any commit
 

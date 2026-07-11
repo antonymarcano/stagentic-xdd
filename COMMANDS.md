@@ -42,6 +42,11 @@ uv run --directory play pytest
 uv run --directory test_utilities pytest
 ```
 
+> **Spec scenarios run in parallel by default** — `spec/pyproject.toml` sets
+> `addopts = ["-n", "auto"]` (pytest-xdist), so every `spec` command below
+> distributes scenarios across workers. To run serially — to debug, or to read
+> un-interleaved output — append `-n0`.
+
 ### `spec/` scenarios
 
 ```
@@ -73,14 +78,6 @@ uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 
 ```
 uv run --directory spec pytest tests --inspector=critic
-```
-
-### `spec/` scenarios with real agent and auditor (require `claude` CLI)
-
-The real agent defaults to the critic; this opts back in to the auditor.
-
-```
-uv run --directory spec pytest tests --agent=real --inspector=auditor
 ```
 
 ## Mutation testing

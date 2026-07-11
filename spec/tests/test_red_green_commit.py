@@ -32,6 +32,7 @@ class TestRedGreenCommit:
                         "Production module exists at src/conversion.py with content",
                         "Workspace closely matches the Reference scene",
                         "Production returns a literal value, and does not use a formula",
+                        "Production returns a value of the same type as the value the test asserts",
                         "Transcript shows the agent ran pytest",
                         "Transcript shows a FAILED pytest result",
                         "Test fails comparing a return value, not on a missing module or symbol",
@@ -104,6 +105,15 @@ def _have_completed(*, matching):
             ),
             "failure": "src/conversion.py uses a computed formula, not a literal value",
         },
+        "Production returns a value of the same type as the value the test asserts": {
+            "verify": lambda transcript, target_dir, reference_scene: (
+                _return_type_matches_asserted_type(
+                    target_dir / "tests" / "test_conversion.py",
+                    target_dir / "src" / "conversion.py",
+                )
+            ),
+            "failure": "src/conversion.py returns a value whose type differs from the value the test asserts",
+        },
         "Transcript shows the agent ran pytest": {
             "verify": lambda transcript, target_dir, reference_scene: bool(
                 re.search(r"\[TOOL] \*\*Bash\*\*.*?pytest", transcript, re.DOTALL)
@@ -163,6 +173,35 @@ def _test_written_before_production(transcript: str) -> bool:
     if test_write is None:
         return False
     return prod_write is None or test_write.start() < prod_write.start()
+
+
+def _return_type_matches_asserted_type(test_path: Path, src_path: Path) -> bool:
+    asserted = _asserted_literal_type(test_path)
+    return asserted is not None and asserted is _returned_literal_type(src_path)
+
+
+def _asserted_literal_type(test_path: Path) -> type | None:
+    tree = ast.parse(test_path.read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assert) and isinstance(node.test, ast.Compare):
+            return _literal_type(node.test.comparators[0])
+    return None
+
+
+def _returned_literal_type(src_path: Path) -> type | None:
+    tree = ast.parse(src_path.read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Return):
+            return _literal_type(node.value)
+    return None
+
+
+def _literal_type(node: ast.expr | None) -> type | None:
+    if isinstance(node, ast.UnaryOp):
+        node = node.operand
+    if isinstance(node, ast.Constant):
+        return type(node.value)
+    return None
 
 
 def _returns_only_literals(source_path: Path) -> bool:

@@ -15,6 +15,10 @@ third line
 
 `06:05:03Z` **[TOOL USE]** Write `/tmp/b.py`
 
+```
+hello
+```
+
 `06:05:03Z` **[TOOL USE]** Edit `/tmp/c.py`
 
 `06:05:03Z` **[TOOL USE]** Glob `*.py`

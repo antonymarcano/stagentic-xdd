@@ -21,7 +21,7 @@ class ClaudeTranscriber:
         output_path.write_text(_render(jsonl_path))
 
 
-def _render(jsonl_path: Path):
+def _render(jsonl_path: Path) -> str:
     entries = _entries(jsonl_path)
     return f"`[VERSIONS]` Used in this run:\n```\nCLI: claude {_cli_version(entries)}\nMODEL: {_model(entries)}\n```\n" + "".join(
         map(_format, _blocks(entries))
@@ -74,11 +74,39 @@ def _timestamp_for(entry) -> str:
 
 def _block_from_item(item, timestamp):
     kind = item.get("type", "").upper().replace("_", " ").replace("-", " ")
-    if item.get("type") == "tool_use":
-        name = item.get("name", "")
-        key = _tool_key(name, item.get("input", {}))
-        return Block(timestamp, kind, f"{name} `{key}`")
-    return Block(timestamp, kind, item.get("text") or item.get("content") or "")
+    match item.get("type"):
+        case "tool_use":
+            return _tool_use_block(
+                item,
+                timestamp,
+                kind
+            )
+        case _:
+            return _plain_block(
+                item,
+                timestamp,
+                kind
+            )
+
+
+def _tool_use_block(item, timestamp, kind):
+    name = item.get("name", "")
+    tool_input = item.get("input", {})
+    header = f"{name} `{_tool_key(name, tool_input)}`"
+    return Block(
+        timestamp,
+        kind,
+        header,
+        _write_body(name, tool_input)
+    )
+
+
+def _plain_block(item, timestamp, kind):
+    return Block(
+        timestamp,
+        kind,
+        item.get("text") or item.get("content") or ""
+    )
 
 
 def _block_from_entry(entry, timestamp):
@@ -119,6 +147,17 @@ def _tool_key(name, tool_input):
     if field:
         return tool_input.get(field, "")
     return next(iter(tool_input.values()), "") if tool_input else ""
+
+
+def _write_body(name, tool_input):
+    if name == "Write":
+        return _fenced(tool_input.get("content", ""))
+    return ""
+
+
+def _fenced(content):
+    separator = "" if content.endswith("\n") else "\n"
+    return f"```\n{content}{separator}```"
 
 
 def _strip_headings(text):

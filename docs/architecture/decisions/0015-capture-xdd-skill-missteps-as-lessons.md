@@ -37,6 +37,7 @@ Record a **lesson** for each distinct BDD/TDD misstep a coding agent makes under
 
 6. **Each lesson carries:**
    - **Task** — the coding exercise.
+   - **Scenario** — the spec test whose scorecard revealed the misstep, linked from the lesson. Unlike the task fixture, the test is harness the agent never sees, so this outward link carries no coaching risk (§5).
    - **Misstep** — what the agent did, in brief, with the single most telling line. The full manifestation is the preserved run artefact co-located in the lesson directory (§3), which the lesson links to for the full evidence.
    - **Config(s)** — the configuration the misstep was seen in, and the configuration the corrective guidance was validated under: the model (with context window), the reasoning effort, and the CLI version.
    - **Evidence** — the critic's verdict as a trimmed scorecard, linking the preserved `critique.md` for the full critique.

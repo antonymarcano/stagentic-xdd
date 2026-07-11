@@ -2,6 +2,7 @@
 
 - **Date-time:** {{YYYY-MM-DDThh:mmZ}}
 - **Task:** [{{task name}}](../../../spec/tasks/{{N-slug}})
+- **Scenario:** [`{{test_name}}`](../../../spec/tests/{{test_file}}.py) — the spec test whose scorecard revealed the misstep
 - **Config(s) seen in:**
   - Model: {{model id, with context window if notable}}
   - Reasoning effort: {{level, or "CLI default (…)" if not explicitly set}}
