@@ -1,7 +1,7 @@
 from contextlib import nullcontext as does_not_raise
 
 import pytest
-from cases import case
+from stagentic.test.cases import case
 
 from raise_when import raise_when
 

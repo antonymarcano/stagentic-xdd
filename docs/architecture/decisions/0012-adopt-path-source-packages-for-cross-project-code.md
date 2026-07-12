@@ -8,7 +8,9 @@ agent-directive: |
 
 # 0012 — Adopt path-source packages for cross-project code
 
-**Status:** Accepted
+**Status:** Accepted 
+
+**NOTE:** the flat top-level module layout is superseded by [ADR 0021](0021-adopt-the-stagentic-namespace-for-shared-code.md); the rest stands.
 
 ## Context
 
@@ -75,6 +77,9 @@ create **`test_utilities/`** as the first such package — a peer project to
   `matchers.py`), imported as `from matchers import …`. Under the recognised
   `src/` root, mutmut keys them `matchers` — matching the import — so they are
   mutation-testable exactly like any production module.
+  ([ADR 0021](0021-adopt-the-stagentic-namespace-for-shared-code.md) supersedes
+  this flat layout: the helpers move under the `stagentic` namespace, imported as
+  `from stagentic.test.matchers import …`, to avoid PyPI name collisions.)
 - `test_utilities` carries its own mutation gate
   (`[tool.mutmut] source_paths = ["src/matchers.py", …]`), **permanently**.
   This retires the workaround of temporarily adding a test helper to another

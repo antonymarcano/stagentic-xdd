@@ -1,4 +1,4 @@
-# stagentic:xdd
+# stagentic-xdd
 
 A planned Claude plugin for language-agnostic Behaviour-Driven Development (BDD) / Test-Driven Development (TDD).
 
@@ -59,7 +59,7 @@ Today, only Python is supported, because the code that facilitates the skill is 
 
 ## Prerequisites
 
-This project requires Claude Code CLI **2.1.150**. Auto-updates are disabled by `.claude/settings.json` — do not run `claude update` without first validating the suite against the candidate version.
+This project requires Claude Code CLI **2.1.191**. Auto-updates are disabled by `.claude/settings.json` — do not run `claude update` without first validating the suite against the candidate version.
 
 Check your current version:
 
@@ -70,13 +70,13 @@ claude --version
 If you already have Claude Code installed, switch to the required version:
 
 ```
-claude install 2.1.150
+claude install 2.1.191
 ```
 
 If you are installing Claude Code for the first time, install the required version directly via npm:
 
 ```
-npm install -g @anthropic-ai/claude-code@2.1.150
+npm install -g @anthropic-ai/claude-code@2.1.191
 ```
 
 ## Development
@@ -86,6 +86,16 @@ This plugin is being developed using a pattern created by Antony Marcano called 
 Each behaviour is specified as a scenario, with fixture code forming the basis of a small, scoped exercise, validated end-to-end in both the result and the approach to achieving it — before the guidance is considered done.
 
 A key problem this pattern solves is that agent behaviours are non-deterministic and cannot be asserted using traditional methods. Instead, a rubric, or scorecard, is used to evaluate non-deterministic agent behaviours.
+
+### Running the skill locally
+
+Launch Claude Code with the plugin loaded from this repo:
+
+```
+claude --plugin-dir xdd-plugin
+```
+
+The skill then appears as `stagentic-xdd:xdd`.
 
 See [`COMMANDS.md`](COMMANDS.md) for key development commands (test runners, linter).
 

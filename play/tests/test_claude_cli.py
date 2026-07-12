@@ -2,7 +2,7 @@ from unittest.mock import ANY, MagicMock
 
 import pytest
 from hamcrest import assert_that, equal_to, has_item, has_items
-from matchers import matching
+from stagentic.test.matchers import matching
 from test_doubles.stubbed_subprocess import StubbedSubprocess
 
 from claude_cli import ClaudeCli

@@ -97,7 +97,7 @@ The alias starts in the test file; lift it to `conftest.py` when a second file n
 
 ## Write parametrise rows with `case`
 
-Parametrised rows use the shared `case` helper (`from cases import case`) rather than a bare `pytest.param` or tuple. `case(scenario_name, **named_values)` takes the scenario name first — so the id leads each row, even though `pytest.param`'s id is positionally last — and takes its values as **keyword arguments only**; there is no positional-values form. Name each value for the `parametrize` argname it feeds:
+Parametrised rows use the shared `case` helper (`from stagentic.test.cases import case`) rather than a bare `pytest.param` or tuple. `case(scenario_name, **named_values)` takes the scenario name first — so the id leads each row, even though `pytest.param`'s id is positionally last — and takes its values as **keyword arguments only**; there is no positional-values form. Name each value for the `parametrize` argname it feeds:
 
 ```python
 @pytest.mark.parametrize("agent_response", [
@@ -114,7 +114,7 @@ Parametrised rows use the shared `case` helper (`from cases import case`) rather
 
 **Why:** the named value at the call site makes which value maps to which test-method argument obvious, instead of the reader matching positions against the `parametrize` header; the id leading the row keeps the case name in view.
 
-`case` is homed in `test_utilities` (`src/cases.py`); import it rather than redefining it per file. **The only exception is `case`'s own tests in `test_cases.py`** — they can't use `case` to exercise `case`.
+`case` is homed in `stagentic-test` (`src/stagentic/test/cases.py`); import it rather than redefining it per file. **The only exception is `case`'s own tests in `test_cases.py`** — they can't use `case` to exercise `case`.
 
 ## Parametrise value-flow tests over ≥2 cases with `ids`
 
@@ -149,7 +149,7 @@ Assertions use PyHamcrest matchers (ADR 0011), in two places:
 
 - **Inline** — `assert_that(actual, <matcher>)`.
 - **Test-double call assertions** — when an exact match can't work, wrap the
-  matcher in `matching` (alias for `match_equality`, `from matchers import
+  matcher in `matching` (alias for `match_equality`, `from stagentic.test.matchers import
   matching`) so it rides inside `assert_called_once_with`:
   `prompt=matching(contains_string(...))`. `ANY` still marks don't-care slots.
 

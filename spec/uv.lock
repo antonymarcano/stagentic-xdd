@@ -54,7 +54,7 @@ dev = [
     { name = "mutmut", specifier = ">=3.6" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "ruff", specifier = ">=0.9" },
-    { name = "test-utilities", editable = "../test_utilities" },
+    { name = "stagentic-test", editable = "../stagentic-test" },
 ]
 
 [[package]]
@@ -139,9 +139,9 @@ wheels = [
 ]
 
 [[package]]
-name = "test-utilities"
+name = "stagentic-test"
 version = "0.0.0"
-source = { editable = "../test_utilities" }
+source = { editable = "../stagentic-test" }
 
 [package.metadata]
 
@@ -165,7 +165,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-xdist" },
     { name = "ruff" },
-    { name = "test-utilities" },
+    { name = "stagentic-test" },
 ]
 
 [package.metadata]
@@ -177,5 +177,5 @@ dev = [
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "ruff", specifier = ">=0.9" },
-    { name = "test-utilities", editable = "../test_utilities" },
+    { name = "stagentic-test", editable = "../stagentic-test" },
 ]

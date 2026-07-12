@@ -52,8 +52,8 @@ across the test suite, starting with `play`.
 - For other assertions, use `assert_that(actual, matcher)`.
 - Alias `match_equality` as **`matching`** so the call site reads at intent:
   `prompt=matching(all_of(contains_string(...)))`. The alias lives in a small
-  shared test module (`play/tests/matchers.py`), imported as
-  `from matchers import matching`.
+  shared test module (`stagentic-test`, `src/stagentic/test/matchers.py`),
+  imported as `from stagentic.test.matchers import matching`.
 
 ## Consequences
 

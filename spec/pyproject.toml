@@ -10,7 +10,7 @@ dev = [
     "pytest-xdist>=3.8.0",
     "ruff>=0.9",
     "play",
-    "test_utilities",
+    "stagentic-test",
 ]
 
 [tool.uv]
@@ -18,7 +18,7 @@ package = false
 
 [tool.uv.sources]
 play = { path = "../play", editable = true }
-test_utilities = { path = "../test_utilities", editable = true }
+stagentic-test = { path = "../stagentic-test", editable = true }
 
 [tool.ruff]
 preview = true

@@ -4,8 +4,8 @@ from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 
 import pytest
-from cases import case
 from hamcrest import assert_that, contains_string, equal_to
+from stagentic.test.cases import case
 
 from conftest import _reject_incompatible_inspector
 

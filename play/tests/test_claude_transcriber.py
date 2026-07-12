@@ -3,8 +3,8 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
-from cases import case
 from hamcrest import assert_that, contains_string, equal_to, starts_with
+from stagentic.test.cases import case
 
 from claude_transcriber import ClaudeTranscriber
 

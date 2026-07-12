@@ -3,7 +3,7 @@ from unittest.mock import ANY, MagicMock
 
 import pytest
 from hamcrest import all_of, assert_that, contains_string, equal_to
-from matchers import matching
+from stagentic.test.matchers import matching
 
 from claude_session import ClaudeSession
 from critic import Critic

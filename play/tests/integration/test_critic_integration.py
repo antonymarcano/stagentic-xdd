@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 from hamcrest import all_of, assert_that, has_item
-from matchers import does_not
+from stagentic.test.matchers import does_not
 
 from claude_cli import ClaudeCli
 from claude_session import ClaudeSession

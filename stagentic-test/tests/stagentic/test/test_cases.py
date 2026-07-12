@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from cases import case
+from stagentic.test.cases import case
 
 
 class TestCase:

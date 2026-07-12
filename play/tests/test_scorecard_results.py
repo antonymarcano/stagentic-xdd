@@ -1,6 +1,6 @@
 import pytest
-from cases import case
 from hamcrest import assert_that, equal_to
+from stagentic.test.cases import case
 
 from scorecard_results import ScorecardResults
 

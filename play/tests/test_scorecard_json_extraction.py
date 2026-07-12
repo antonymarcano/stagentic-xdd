@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from cases import case
+from stagentic.test.cases import case
 
 from scorecard_json_extraction import candidate_scorecard_from
 

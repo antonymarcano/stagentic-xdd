@@ -29,57 +29,49 @@ The rule applies equally to source and tests.
 
 ## Mutation-test as you work
 
-Per ADR
-[0010](architecture/decisions/0010-adopt-mutation-testing-with-a-staged-rollout.md),
+Per ADR [0010](architecture/decisions/0010-adopt-mutation-testing-with-a-staged-rollout.md),
 mutation testing is part of doing the work — scoped to the files in
-`source_paths`, not the whole codebase.
+`source_paths`, not the whole codebase. While a `source_paths` file is in
+flight, reaching green is not the cue to commit. The green step runs this
+sequence (see [Mutation testing](../COMMANDS.md#mutation-testing) for the
+commands and `<module>` naming):
 
-This is the green-step discipline. While a `source_paths` file is in flight,
-reaching green is not yet the cue to propose a commit: the green step is
-**focused mutmut on the file → dial back any survivor to the most naive code
-that still passes, re-running until clean → run the test suite the change's
-scope calls for → full-set mutmut gate → remove the `mutants/` tree → propose
-the commit**. Don't propose a
-commit straight off a green when the file you're developing is a mutation
-target.
+1. **Focused mutmut on the file.** Dial back any survivor to the most naive
+   code that still passes; re-run until clean.
+2. **Run the test suite** the change's scope calls for.
+3. **Full-set mutmut over `source_paths`** as the regression gate: clean, or
+   every survivor a documented accepted-mutation.
+4. **Remove the `mutants/` tree**, then propose the commit.
 
-**The file you're developing belongs in `source_paths` while you work on it.**
-If it isn't a mutation target yet — a new module — add its path to `source_paths`
-so mutmut mutates it, and run the focused check after *every* green. If the module
-is new and developed mutation-clean from the outset — every green free of
-survivors — that `source_paths` addition can be committed as you go, since each
-commit is already a clean baseline. When instead you're bringing an *existing*
-file up to standard and it starts with survivors, keep its `source_paths` addition
-uncommitted until the work's final green, so you never commit a baseline that
-isn't yet clean. (A *shared test
-helper* can't be mutated from under `tests/`: mutmut's source roots are
-hardcoded, so a `tests/`-located file's mutants never map to a covering test.
-Home it in `test_utilities/src` instead, where it's a permanent mutation target
-like any module — see ADR
-[0012](architecture/decisions/0012-adopt-path-source-packages-for-cross-project-code.md).)
-A green with no surviving mutants — or with no mutants at all, when the code is
-too minimal to mutate — both mean nothing is running ahead of the tests.
+Focused-first catches overreach quickly, before you pay for the full sweep.
 
-**Start from a clean baseline.** A survivor after a red-green only implicates
-your new code if the file had none before you started. For a file that predates
-your change, baseline it with the focused check first; if it already carries
-survivors — pre-existing speculative code, or coverage gaps — close them before
-writing the new test/code, so any survivor that appears afterwards is
-unambiguously yours to dial back.
+**A survivor means subtract code, not add coverage.** The focused check is
+fast; a surviving mutant means the implementation is running ahead of its
+tests — speculative code no test pins. *Remove* it — don't write a test to
+cover the survivor. The generality you strip isn't abandoned: a later test that
+genuinely demands it drives it back in as its own red-green. (A green with no
+survivors — or none to mutate, when the code is too minimal — both mean nothing
+runs ahead of the tests.)
 
-**First — focused, on the file you're developing.** After every green, run
-the focused mutation check on that file (see
-[Mutation testing](../COMMANDS.md#mutation-testing) for the command and the
-`<module>` naming). It's fast, and a surviving mutant means the
-implementation is running ahead of its tests — speculative code no test pins.
-Dial it back to what the test demands before going on: *remove* the unpinned
-implementation — don't write a new test to cover the survivor. A survivor says
-subtract code, not add coverage. The generality you strip is deferred, not
-abandoned: it returns as its own red-green when a later test genuinely demands
-it. Two beats — dial the overstep back against the current tests, then let a new
-failing test drive the generalisation in.
+**Start from a clean baseline.** A survivor implicates your new code only if
+the file had none before you started. For a file that predates your change,
+baseline it with the focused check first and close any pre-existing survivors —
+speculative code or coverage gaps — before writing the new test/code, so any
+survivor that appears afterwards is unambiguously yours to dial back.
 
-**Then — the full set, as a regression gate.** Once the focused run is clean,
-run `mutmut run` over `source_paths` before committing: it must come back clean,
-or every survivor a documented accepted-mutation. Focused-first catches
-overreach quickly, without paying for the full sweep first.
+**Keep the file in `source_paths` while you work on it.** If it isn't a
+mutation target yet — a new module — add its path so mutmut mutates it, and run
+the focused check after every green. When to commit that addition:
+
+- **New module, developed clean from the outset** (every green survivor-free):
+  commit the `source_paths` addition as you go — each commit is already a clean
+  baseline.
+- **Existing file that starts with survivors:** keep the addition uncommitted
+  until the work's final green, so you never commit a baseline that isn't yet
+  clean.
+
+A *shared test helper* can't be mutated from under `tests/`: mutmut's source
+roots are hardcoded, so a `tests/`-located file's mutants never map to a
+covering test. Home it in `stagentic-test/src/stagentic/test` instead, where
+it's a permanent mutation target like any module — see ADR
+[0012](architecture/decisions/0012-adopt-path-source-packages-for-cross-project-code.md).

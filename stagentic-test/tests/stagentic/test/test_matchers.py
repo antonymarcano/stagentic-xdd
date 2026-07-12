@@ -1,7 +1,7 @@
 import pytest
 from hamcrest import assert_that, equal_to
 
-from matchers import contains_any, contains_strings
+from stagentic.test.matchers import contains_any, contains_strings
 
 
 class TestContainsStrings:

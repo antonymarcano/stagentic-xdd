@@ -46,3 +46,4 @@ Evidence (e.g. `0020-drive-skill-invocation-from-the-frontmatter-description/`).
 | [0018](0018-build-the-xdd-skill-as-a-corrective-skill.md) | Build the xdd skill as a Corrective Skill | Proposed |
 | [0019](0019-pin-and-record-reasoning-effort-and-context-window.md) | Pin and record reasoning effort and the context window | Proposed |
 | [0020](0020-drive-skill-invocation-from-the-frontmatter-description.md) | Drive skill invocation from the frontmatter description | Accepted |
+| [0021](0021-adopt-the-stagentic-namespace-for-shared-code.md) | Adopt the `stagentic` namespace for shared cross-project code | Accepted |

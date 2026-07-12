@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "test_utilities"
+name = "stagentic-test"
 version = "0.0.0"
 requires-python = ">=3.12"
 
@@ -16,8 +16,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
+packages = ["src/stagentic"]
 
 [tool.ruff]
 preview = true
@@ -46,5 +45,5 @@ extend-select = [
 pythonpath = ["src", "tests"]
 
 [tool.mutmut]
-source_paths = ["src/matchers.py", "src/cases.py"]
+source_paths = ["src/stagentic/test/matchers.py", "src/stagentic/test/cases.py"]
 also_copy = ["src/"]

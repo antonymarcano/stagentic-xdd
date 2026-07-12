@@ -2,8 +2,8 @@ from pathlib import Path
 from unittest.mock import ANY, MagicMock
 
 import pytest
-from cases import case
 from hamcrest import assert_that, equal_to
+from stagentic.test.cases import case
 
 from auditor import Auditor
 from result import Failure, Success
