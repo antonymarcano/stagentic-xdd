@@ -21,11 +21,18 @@ green alongside the guidance change — is defined in
 [ADR 0015](../architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md).
 [`TEMPLATE.md`](TEMPLATE.md) is the lesson shape.
 
+**Recurrences get their own lesson.** When a corrected misstep reappears, capture
+it as a new lesson named after the original with a `-RECURRED` suffix, dated by
+the recurrence (not the original); the original lesson keeps a one-line pointer to
+it. Keeping them separate dates each recurrence and preserves any later-emerging
+external cause (a model or effort change) for after-the-fact diagnosis.
+
 ## Index
 
-| # | Lesson | Misstep it guards against |
-|---|---|---|
-| 1 | [An honest red fails on the assertion, not the import](20260627-2225-honest-red-fails-on-the-assertion-not-the-import/lesson.md) | Stopping at an import-error red instead of driving the failure down to an assertion. |
-| 2 | [The failing test is written before the production code](20260628-1800-write-the-failing-test-before-the-production-code/lesson.md) | Writing the production code before the failing test. |
-| 3 | [Fake it until you triangulate it](20260701-0635-fake-it-until-you-triangulate-it/lesson.md) | Jumping to the general implementation (Obvious Implementation) instead of Fake-It. |
-| 4 | [A failing stub returns a value of the asserted type](20260710-1711-a-failing-stub-returns-a-value-of-the-asserted-type/lesson.md) | Stubbing with a value whose type differs from the asserted value (`None`, int), so the red is a type artefact rather than a value comparison. |
+| # | Lesson                                                                                                                                                    | Misstep it guards against |
+|---|-----------------------------------------------------------------------------------------------------------------------------------------------------------|---|
+| 1 | [An honest red fails on the assertion, not the import](20260627-2225-honest-red-fails-on-the-assertion-not-the-import/lesson.md)                          | Stopping at an import-error red instead of driving the failure down to an assertion. |
+| 2 | [The failing test is written before the production code](20260628-1800-write-the-failing-test-before-the-production-code/lesson.md)                       | Writing the production code before the failing test. |
+| 3 | [Fake it until you triangulate it](20260701-0635-fake-it-until-you-triangulate-it/lesson.md)                                                              | Jumping to the general implementation (Obvious Implementation) instead of Fake-It. |
+| 4 | [A failing stub returns a value of the asserted type](20260710-1711-a-failing-stub-returns-a-value-of-the-asserted-type/lesson.md)                        | Stubbing with a value whose type differs from the asserted value (`None`, int), so the red is a type artefact rather than a value comparison. |
+| 5 | [The failing test is written before the production code — RECURRENCE](20260712-1855-write-the-failing-test-before-the-production-code-RECURRED/lesson.md) | Recurrence of #2 under the same config — the one-line correction held at ~20%; re-corrected with a workflow, a read-first step, and motivation. |

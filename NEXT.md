@@ -4,7 +4,27 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Capture code-change diffs in the run transcript — Edit still to do
+## 1. Isolate what carries the xdd skill — drop the Workflow, try a principles framing
+
+The committed xdd skill drove the write-order misstep to 0/100 with a
+compose→evaluate→write Workflow, a read-first step, motivation, and the TDD Model
+corrections — but which parts are load-bearing is untested (see this
+[lesson](docs/lessons/20260628-1800-write-the-failing-test-before-the-production-code/lesson.md#future-experiments-to-try)).
+Measure variations
+against the committed wording with the batch/tally scripts
+([COMMANDS.md](COMMANDS.md)): snapshot each, run to n=100 (alternating against the
+committed wording to cancel time/load drift); the go-live bar is ≤1/100 total
+failures.
+
+- **Drop the Workflow section**, keeping only the "read any related test/code
+  first" directive alongside the Model corrections and motivation — does
+  write-order hold at ~0/100 without the procedural loop?
+- **Replace the workflow with a set of principles**, framed as "A good
+  Test-Driven Developer always follows these principles…" followed by a list of
+  principles rather than a procedure — does a principles framing hold as well as
+  the workflow?
+
+## 2. Capture code-change diffs in the run transcript — Edit still to do
 
 The captured `transcript.md` (produced by `ClaudeTranscriber`) renders a tool use
 as only its `file_path`, so what the agent changed can be invisible to a reviewer
@@ -19,7 +39,7 @@ diff. The JSONL already carries the full tool input. TDD in `play`
 (`claude_transcriber.py`) — extend the current transcriber, rather than waiting on
 the ground-up rewrite in ADR 0014.
 
-## 2. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 3. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
 scenario many times and tallying per-run outcomes. Until this lands, an interim
@@ -36,7 +56,7 @@ Per run, capture the pytest result plus the scenario's signals (skill loaded; th
 production shape). This makes experiments (baseline vs B, gateway variants)
 reproducible rather than one-off.
 
-## 3. Contract-test ClaudeCli's options
+## 4. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
@@ -47,7 +67,7 @@ verifying it does what we expect against the real CLI, one at a time.
 move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 4. Pin and record reasoning effort and the context window
+## 5. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -84,7 +104,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 5. Improvement plan working approach
+## 6. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -167,7 +187,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 6. Improvement plan
+## 7. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
