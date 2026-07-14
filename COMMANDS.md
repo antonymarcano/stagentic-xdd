@@ -74,25 +74,62 @@ uv run --directory spec pytest tests --agent=real
 uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 ```
 
-### 10× real-agent batch (interim — superseded by the N× gateway in NEXT.md)
+### Real-agent recurrence batch (interim — superseded by the N× gateway in NEXT.md)
 
-Runs the real-agent scenarios 10× at 10-way concurrency, staggering each launch by
-100ms — the shortest stagger that avoids the archive copytree race under parallel
-runs (100ms clean at 30 runs; 50ms flakes ~2/30). Keep it one line: a mid-command
-newline splits the loop body and runs `pytest` without its flags.
+Two helper scripts in [`scripts/`](scripts) run a scenario N× against the real
+agent and tally the outcomes — interim tooling for measuring how often a lesson's
+misstep recurs, superseded by the play N× gateway (NEXT.md item 2).
+
+**Run** — N parallel real-agent runs of one scenario, artefacts archived under
+`spec/.artefacts`:
 
 ```
-cd /workspace/stagentic-xdd && for r in $(seq 10); do uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts & sleep 0.1; done; wait
+bash scripts/run-recurrence-batch.sh [pytest-node] [count] [artefacts-dir]
 ```
 
-It launches the runs but does not tally results — read each run's outcome from its
-own output.
+Defaults: the write-order scenario
+(`tests/test_red_green_commit.py::TestRedGreenCommit::test_write_a_failing_test`),
+`count=10`, and `artefacts-dir=.artefacts`. Keep batches separate by naming a
+subfolder per batch at run time — `.artefacts/<batch-name>` — rather than
+adjacent `.artefacts-*` dirs; all artefacts stay under `.artefacts`. Launches
+stagger by 100ms — the shortest stagger that avoids the archive copytree race
+under parallel runs (100ms clean at 30 runs; 50ms flakes ~2/30).
+
+**Tally** — count the runs in an artefacts dir and how many failed a named critic
+characteristic, listing the failing artefact folders:
+
+```
+bash scripts/tally-recurrence-batch.sh [characteristic] [artefacts-dir]
+```
+
+Defaults: the write-order characteristic and `spec/.artefacts`. Tallies every run
+currently in the artefacts dir (cumulative across batches — clear it between
+batches for a per-batch count).
+
+**When a batch deviates from the established rate**, check
+[status.claude.com](https://status.claude.com/) for an incident (degraded
+capacity, model routing, elevated errors) before attributing the shift to a code
+or guidance change — an upstream incident can masquerade as one.
 
 ### `spec/` scenarios with critic (require `claude` CLI)
 
 ```
 uv run --directory spec pytest tests --inspector=critic
 ```
+
+## Run artefacts
+
+Real-agent runs archive their workspace (transcript, critique, source, tests)
+under `spec/.artefacts/` — gitignored via `**/.artefacts`. `--.artefacts-dir`
+takes a path **relative to the spec project** (because `uv run --directory spec`
+runs there), so `.artefacts` lands under `spec/`.
+
+Keep separate runs apart with a **subfolder per batch under `.artefacts`, named
+at run time**: `--.artefacts-dir .artefacts/<batch-name>` (e.g.
+`.artefacts/experiment/<wording>`). Everything stays under `.artefacts`; do
+**not** create adjacent `.artefacts-*` sibling directories. Point
+`scripts/tally-recurrence-batch.sh` at a subfolder to tally that batch, or at a
+parent folder to tally every batch beneath it cumulatively.
 
 ## Mutation testing
 
