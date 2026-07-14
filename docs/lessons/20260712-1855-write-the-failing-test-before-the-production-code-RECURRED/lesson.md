@@ -14,10 +14,13 @@
 
 A recurrence of
 [The failing test is written before the production code](../20260628-1800-write-the-failing-test-before-the-production-code/lesson.md).
-That lesson's guidance corrected the misstep to 0/10 at capture; it reappeared
-here under the same recorded config, with no discernible external change. A
-recurrence is captured as its own dated lesson so the recurrence date, and any
-later-emerging external cause (a model or effort change), stays legible.
+That lesson's guidance was validated at 0/10 at capture — a ten-run sample too
+small to rule out a ~20% failure rate (0/10 is consistent with a true rate up to
+~30%). The misstep reappeared here under the same recorded config, for no apparent
+reason: the data cannot separate a regression from the original validation simply
+having been underpowered. A recurrence is captured as its own dated lesson so the
+recurrence date, and any later-emerging external cause (a model or effort change),
+stays legible.
 
 ## Task
 
