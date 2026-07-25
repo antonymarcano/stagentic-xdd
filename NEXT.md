@@ -4,7 +4,38 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Isolate what carries the xdd skill — drop the Workflow, try a principles framing
+## 1. Fix the archive copytree race — filter transient dirs from the archive
+
+`archive()` (`play/src/archiver.py`) does an **unfiltered** `shutil.copytree` of the
+whole agent workspace — including transient `.venv/`, `__pycache__/`,
+`.pytest_cache/`. `.venv` symlinks into the shared uv cache, so `copytree` follows
+in; under parallel batch runs another run's `uv run` mutates that cache mid-copy, a
+listed file vanishes, and `copytree` raises. The raise happens in the
+`pytest_runtest_makereport` hook (after the scorecard already passed), so it fails
+the pytest **process** even though the scenario succeeded — and can **drop that
+run's archive entirely**.
+
+**Fix:** give the copytree `ignore=shutil.ignore_patterns('.venv', '__pycache__',
+'.pytest_cache')` (mirrors `_set_opening_scene_for`) — `.venv` doesn't belong in an
+archive anyway. TDD'd in `play` (`archiver.py` / `test_archiver.py`).
+
+**What we learned (2026-07-25)** — promoted from "very low priority" because it
+bites in practice:
+- Seen **~1/100** on a 5×10 real-agent batch of both `TestRedGreenCommit` scenarios.
+- **Not caused by concurrent jobs**: re-running the batch *in isolation* still hit
+  it, and that time it **lost a run** (a scenario archived 49/50), not just a
+  spurious `FAIL` — so it now causes real **data loss**.
+- **Running both scenarios per invocation worsens it** (2× copytrees and 2× uv-cache
+  churn per process), but the trigger is copying the volatile dirs, not the pairing.
+- The 100 ms launch stagger only narrows the window; it does not close it.
+- Scorecard tallies (reading `critique.md`) survive the spurious `FAIL`, but a
+  dropped archive goes silently uncounted — so this matters for batch-tally integrity.
+
+**Workarounds until fixed:** one scenario per batch run (single-test node), lower
+per-batch concurrency, or a bigger launch stagger — each narrows the window, none
+removes it.
+
+## 2. Isolate what carries the xdd skill — drop the Workflow, try a principles framing
 
 The committed xdd skill drove the write-order misstep to 0/100 with a
 compose→evaluate→write Workflow, a read-first step, motivation, and the TDD Model
@@ -24,7 +55,7 @@ failures.
   principles rather than a procedure — does a principles framing hold as well as
   the workflow?
 
-## 2. Capture code-change diffs in the run transcript — Edit still to do
+## 3. Capture code-change diffs in the run transcript — Edit still to do
 
 The captured `transcript.md` (produced by `ClaudeTranscriber`) renders a tool use
 as only its `file_path`, so what the agent changed can be invisible to a reviewer
@@ -39,7 +70,7 @@ diff. The JSONL already carries the full tool input. TDD in `play`
 (`claude_transcriber.py`) — extend the current transcriber, rather than waiting on
 the ground-up rewrite in ADR 0014.
 
-## 3. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
 scenario many times and tallying per-run outcomes. Until this lands, an interim
@@ -56,7 +87,7 @@ Per run, capture the pytest result plus the scenario's signals (skill loaded; th
 production shape). This makes experiments (baseline vs B, gateway variants)
 reproducible rather than one-off.
 
-## 4. Contract-test ClaudeCli's options
+## 5. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
@@ -67,7 +98,7 @@ verifying it does what we expect against the real CLI, one at a time.
 move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 5. Pin and record reasoning effort and the context window
+## 6. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -104,7 +135,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 6. Improvement plan working approach
+## 7. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -187,7 +218,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 7. Improvement plan
+## 8. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -315,27 +346,6 @@ This may become the standard for all files.
   exclude or clean them before the agent runs.
 - The agent's cwd must be the workspace root for `uv run pytest` to
   resolve correctly.
-
-## Very low priority: archive copytree races under parallel runs
-
-`archive` (`play/src/archiver.py`) does an unfiltered `shutil.copytree` of the
-whole agent workspace — including transient `.venv/`, `__pycache__/`,
-`.pytest_cache/`. Under parallel batch runs, a file it has listed can change or
-vanish mid-copy, so `copytree` raises. Because that raise happens in the
-`pytest_runtest_makereport` hook (after the assertion already passed), pytest
-fails the *process* even though the scenario succeeded — a spurious `pytest=FAIL`
-on a run whose scorecard is all-PASS (seen ~2/30 at 10-way concurrency; isolated
-runs are clean). Fix: give the copytree `ignore_patterns('.venv', '__pycache__',
-'.pytest_cache')` (mirrors `_set_opening_scene_for`), TDD'd in `play/`. Relates to
-the transient-artefacts known constraint above.
-
-**Now on the default path (decided 2026-07-10).** `spec` runs parallel by default
-(`addopts = ["-n", "auto"]`, pytest-xdist), so this race is no longer confined to
-ad-hoc batch runs — it can surface on any routine spec run. Decision: **leave the
-priority where it is** and fix only when it actually bites, rather than
-pre-emptively. `-n auto` over the current small scenario set runs at low (~2-way)
-concurrency, where the race is unlikely; revisit if it starts flaking as the
-scenario count grows.
 
 ## Enforcing working-practices via hooks
 
