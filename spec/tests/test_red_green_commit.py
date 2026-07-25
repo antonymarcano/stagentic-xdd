@@ -29,8 +29,8 @@ class TestRedGreenCommit:
                 should=_have_completed(
                     matching=[
                         "Transcript shows the agent invoked the xdd skill",
-                        "Production module exists at src/conversion.py with content",
-                        "Workspace closely matches the Reference scene",
+                        "A production module for the converter exists with content and is imported by the test",
+                        "Workspace code is equivalent to the Reference Scene (names and folder structure can vary)",
                         "Production returns a literal value, and does not use a formula",
                         "Production returns a value of the same type as the value the test asserts",
                         "Transcript shows the agent ran pytest",
@@ -62,8 +62,8 @@ class TestRedGreenCommit:
                 should=_have_completed(
                     matching=[
                         "Transcript shows the agent invoked the xdd skill",
-                        "Production module exists at src/conversion.py with content",
-                        "Workspace closely matches the Reference scene",
+                        "A production module for the converter exists with content and is imported by the test",
+                        "Workspace code is equivalent to the Reference Scene (names and folder structure can vary)",
                         "Production returns a literal value, and does not use a formula",
                         "Transcript shows the agent ran pytest",
                         "Transcript shows a PASSED pytest result",
@@ -86,14 +86,14 @@ def _set_opening_scene_for(task_name: str, working_dir: Path) -> None:
 # Including optional programmatic Auditor lambdas (ignored by agentic Critic)
 def _have_completed(*, matching):
     table = {
-        "Production module exists at src/conversion.py with content": {
+        "A production module for the converter exists with content and is imported by the test": {
             "verify": lambda transcript, target_dir, reference_scene: (
                 (target_dir / "src" / "conversion.py").is_file()
                 and (target_dir / "src" / "conversion.py").stat().st_size > 0
             ),
             "failure": "src/conversion.py is missing or empty",
         },
-        "Workspace closely matches the Reference scene": {
+        "Workspace code is equivalent to the Reference Scene (names and folder structure can vary)": {
             "verify": lambda transcript, target_dir, reference_scene: (
                 not _tree_diff(reference_scene, target_dir)
             ),

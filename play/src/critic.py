@@ -47,8 +47,8 @@ def _prompt_for(
     return (
         f"Transcript: {evidence_source}\n"
         f"Workspace: {working_dir}\n\n"
-        f"Reference scene: {reference_scene}\n"
-        f"The reference scene is the canonical end-state; for characteristics about the workspace, judge by equivalence to it.\n\n"
+        f"Reference Scene: {reference_scene}\n"
+        f"The Reference Scene is the canonical end-state; for characteristics about the workspace, judge by equivalence to it (not necessarily exactly the same).\n\n"
         f"Evaluate each of the following characteristics against the transcript and workspace.\n"
         f"Respond with only a JSON array where each element has 'characteristic' and 'status' (PASS or FAIL).\n\n"
         f"Characteristics:\n{characteristics}"
