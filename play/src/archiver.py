@@ -10,8 +10,16 @@ def current_timestamp():
     return datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
 
 
-def is_archivable(*, phase: str, tmp_path: Path | None, artefacts_dir: str | None) -> bool:
-    return phase == "call" and tmp_path is not None and artefacts_dir is not None
+def is_archivable(*,
+                  phase: str,
+                  tmp_path: Path | None,
+                  artefacts_dir: str | None
+                  ) -> bool:
+    return (
+            phase == "call"
+            and tmp_path is not None
+            and artefacts_dir is not None
+        )
 
 
 def archive(*, phase, tmp_path, test_name, artefacts_dir, timestamp):
