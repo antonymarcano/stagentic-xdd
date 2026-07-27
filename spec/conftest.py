@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 from agent import Agent
-from archiver import archive, current_timestamp
+from archiver import archive, current_timestamp, is_archivable
 from auditor import Auditor
 from claude_cli import ClaudeCli
 from claude_session import ClaudeSession
@@ -39,13 +39,16 @@ def pytest_collection_modifyitems(config, items):
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     yield
-    archive(
-        phase=call.when,
-        tmp_path=item.funcargs.get("tmp_path"),
-        test_name=item.name,
-        artefacts_dir=item.config.getoption("--.artefacts-dir"),
-        timestamp=current_timestamp(),
-    )
+    tmp_path = item.funcargs.get("tmp_path")
+    artefacts_dir = item.config.getoption("--.artefacts-dir")
+    if is_archivable(phase=call.when, tmp_path=tmp_path, artefacts_dir=artefacts_dir):
+        archive(
+            phase=call.when,
+            tmp_path=tmp_path,
+            test_name=item.name,
+            artefacts_dir=artefacts_dir,
+            timestamp=current_timestamp(),
+        )
 
 
 @pytest.fixture
