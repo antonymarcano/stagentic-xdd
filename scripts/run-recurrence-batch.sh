@@ -22,10 +22,7 @@ artefacts="${3:-.artefacts}"
 
 echo "Running ${count}× real-agent into ${artefacts}: ${node}"
 
-# Stagger launches by 100ms — the shortest stagger that avoids the archive
-# copytree race under parallel runs (100ms clean at 30 runs; 50ms flakes ~2/30).
 for _ in $(seq "$count"); do
   uv run --directory spec pytest "$node" --agent=real --.artefacts-dir "$artefacts" -n0 &
-  sleep 0.1
 done
 wait
