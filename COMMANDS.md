@@ -78,7 +78,7 @@ uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 
 Two helper scripts in [`scripts/`](scripts) run a scenario N× against the real
 agent and tally the outcomes — interim tooling for measuring how often a lesson's
-misstep recurs, superseded by the play N× gateway (NEXT.md item 2).
+misstep recurs, superseded by the play N× gateway (NEXT.md).
 
 **Run** — N parallel real-agent runs of one scenario, artefacts archived under
 `spec/.artefacts`:

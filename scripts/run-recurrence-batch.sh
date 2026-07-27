@@ -3,7 +3,7 @@
 # run's artefacts in spec/.artefacts.
 #
 # Interim tooling for measuring how often a lesson's misstep recurs; superseded
-# by the play N× gateway (NEXT.md item 2).
+# by the play N× gateway (NEXT.md).
 #
 # Usage: run-recurrence-batch.sh [pytest-node] [count] [artefacts-dir]
 #   pytest-node    scenario to run (default: the write-order scenario)
