@@ -51,5 +51,5 @@ def _avoiding_copy_tree_race_condition() -> Callable[[Any, list[str]], set[str]]
     return shutil.ignore_patterns(
         ".venv",
         "__pycache__",
-        ".pytest_cache"
+        ".pytest_cache",
     )
