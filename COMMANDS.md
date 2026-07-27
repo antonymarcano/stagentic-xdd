@@ -74,11 +74,11 @@ uv run --directory spec pytest tests --agent=real
 uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 ```
 
-### Real-agent recurrence batch (interim — superseded by the N× gateway in NEXT.md)
+### Real-agent recurrence batch (interim)
 
 Two helper scripts in [`scripts/`](scripts) run a scenario N× against the real
 agent and tally the outcomes — interim tooling for measuring how often a lesson's
-misstep recurs, superseded by the play N× gateway (NEXT.md).
+misstep recurs.
 
 **Run** — N parallel real-agent runs of one scenario, artefacts archived under
 `spec/.artefacts`:

@@ -2,8 +2,7 @@
 # Run a spec scenario N× in parallel against the real agent, preserving each
 # run's artefacts in spec/.artefacts.
 #
-# Interim tooling for measuring how often a lesson's misstep recurs; superseded
-# by the play N× gateway (NEXT.md).
+# Interim tooling for measuring how often a lesson's misstep recurs.
 #
 # Usage: run-recurrence-batch.sh [pytest-node] [count] [artefacts-dir]
 #   pytest-node    scenario to run (default: the write-order scenario)
