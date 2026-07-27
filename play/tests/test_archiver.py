@@ -128,3 +128,6 @@ class TestIsArchivable:
 
     def test_should_say_is_not_archivable_without_a_workspace(self):
         assert is_archivable(phase="call", tmp_path=None, artefacts_dir="/tmp/artefacts") is False
+
+    def test_should_say_is_not_archivable_without_an_artefacts_dir(self, tmp_path):
+        assert is_archivable(phase="call", tmp_path=tmp_path, artefacts_dir=None) is False
