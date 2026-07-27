@@ -2,6 +2,9 @@ import re
 from datetime import UTC
 from unittest.mock import patch
 
+import pytest
+from stagentic.test.cases import case
+
 from archiver import archive, current_timestamp
 
 
@@ -25,11 +28,14 @@ class TestArchiver:
 
         assert (dest / "transcript.md").read_text() == "some content"
 
-    def test_should_exclude_the_venv_from_the_archive(self, tmp_path):
+    @pytest.mark.parametrize("transient", [
+        case("venv", transient=".venv"),
+    ])
+    def test_should_exclude_transient_dirs_from_the_archive(self, tmp_path, transient):
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         (workspace / "transcript.md").write_text("keep me")
-        (workspace / ".venv").mkdir()
+        (workspace / transient).mkdir()
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
@@ -37,7 +43,7 @@ class TestArchiver:
                        artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
         assert (dest / "transcript.md").exists()
-        assert not (dest / ".venv").exists()
+        assert not (dest / transient).exists()
 
     def test_archive_returns_the_destination_it_wrote(self, tmp_path):
         workspace = tmp_path / "workspace"
