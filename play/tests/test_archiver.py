@@ -9,17 +9,17 @@ from archiver import archive, current_timestamp, is_archivable
 
 
 class TestCurrentTimestamp:
-    def test_current_timestamp_format(self):
+    def test_should_be_formatted_as_a_date_and_time(self):
         assert re.fullmatch(r"\d{8}-\d{6}", current_timestamp())
 
-    def test_current_timestamp_is_in_utc(self):
+    def test_should_be_in_utc(self):
         with patch("archiver.datetime") as mock_datetime:
             current_timestamp()
         mock_datetime.now.assert_called_once_with(UTC)
 
 
 class TestArchive:
-    def test_archive_copies_workspace_to_timestamped_folder(self, tmp_path):
+    def test_should_copy_the_workspace_to_a_timestamped_folder(self, tmp_path):
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         (workspace / "transcript.md").write_text("some content")
@@ -35,7 +35,7 @@ class TestArchive:
         case("pycache", transient="__pycache__"),
         case("pytest-cache", transient=".pytest_cache"),
     ])
-    def test_should_exclude_transient_dirs_from_the_archive(self, tmp_path, transient):
+    def test_should_exclude_transient_dirs(self, tmp_path, transient):
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         (workspace / "transcript.md").write_text("keep me")
@@ -49,7 +49,7 @@ class TestArchive:
         assert (dest / "transcript.md").exists()
         assert not (dest / transient).exists()
 
-    def test_archive_returns_the_destination_it_wrote(self, tmp_path):
+    def test_should_return_the_destination_it_wrote(self, tmp_path):
         workspace = tmp_path / "workspace"
         workspace.mkdir()
         (workspace / "transcript.md").write_text("some content")
@@ -73,7 +73,7 @@ class TestArchive:
         suffix = dest.name.rsplit("-", 1)[-1]
         assert re.fullmatch(r"[0-9a-f]{8}", suffix)
 
-    def test_archive_does_not_collide_for_same_timestamp_and_test_name(self, tmp_path):
+    def test_should_not_collide_for_the_same_timestamp_and_test_name(self, tmp_path):
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
