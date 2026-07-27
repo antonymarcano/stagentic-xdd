@@ -10,6 +10,10 @@ def current_timestamp():
     return datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
 
 
+def should_archive(*, phase: str, tmp_path: Path | None, artefacts_dir: str | None) -> bool:
+    return True
+
+
 def archive(*, phase, tmp_path, test_name, artefacts_dir, timestamp):
     if phase != "call" or artefacts_dir is None or tmp_path is None:
         return None

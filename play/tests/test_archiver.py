@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from stagentic.test.cases import case
 
-from archiver import archive, current_timestamp
+from archiver import archive, current_timestamp, should_archive
 
 
 class TestArchiver:
@@ -117,3 +117,8 @@ class TestArchiver:
         archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=None, timestamp="20260527-101638")
 
         assert list(artefacts.iterdir()) == []
+
+
+class TestShouldArchive:
+    def test_should_hold_on_the_call_phase_with_a_workspace_and_artefacts_dir(self, tmp_path):
+        assert should_archive(phase="call", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is True
