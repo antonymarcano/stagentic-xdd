@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from stagentic.test.cases import case
 
-from archiver import archive, current_timestamp, should_archive
+from archiver import archive, current_timestamp, is_archivable
 
 
 class TestArchiver:
@@ -119,12 +119,12 @@ class TestArchiver:
         assert list(artefacts.iterdir()) == []
 
 
-class TestShouldArchive:
-    def test_should_hold_on_the_call_phase_with_a_workspace_and_artefacts_dir(self, tmp_path):
-        assert should_archive(phase="call", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is True
+class TestIsArchivable:
+    def test_should_say_is_archivable_when_in_test_run_call_phase_with_a_workspace_and_an_artefacts_dir(self, tmp_path):
+        assert is_archivable(phase="call", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is True
 
-    def test_should_not_hold_outside_the_call_phase(self, tmp_path):
-        assert should_archive(phase="setup", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is False
+    def test_should_say_is_not_archivable_when_outside_test_run_call_phase(self, tmp_path):
+        assert is_archivable(phase="setup", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is False
 
-    def test_should_not_hold_without_a_workspace(self):
-        assert should_archive(phase="call", tmp_path=None, artefacts_dir="/tmp/artefacts") is False
+    def test_should_say_is_not_archivable_without_a_workspace(self):
+        assert is_archivable(phase="call", tmp_path=None, artefacts_dir="/tmp/artefacts") is False
