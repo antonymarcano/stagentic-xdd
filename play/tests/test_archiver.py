@@ -121,13 +121,25 @@ class TestArchiver:
 
 class TestIsArchivable:
     def test_should_say_is_archivable_when_in_test_run_call_phase_with_a_workspace_and_an_artefacts_dir(self, tmp_path):
-        assert is_archivable(phase="call", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is True
+        should_archive = is_archivable(
+            phase="call", tmp_path=tmp_path, artefacts_dir=str(tmp_path)
+        )
+        assert should_archive is True
 
     def test_should_say_is_not_archivable_when_outside_test_run_call_phase(self, tmp_path):
-        assert is_archivable(phase="setup", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is False
+        should_archive = is_archivable(
+            phase="setup", tmp_path=tmp_path, artefacts_dir=str(tmp_path)
+        )
+        assert should_archive is False
 
     def test_should_say_is_not_archivable_without_a_workspace(self):
-        assert is_archivable(phase="call", tmp_path=None, artefacts_dir="/tmp/artefacts") is False
+        should_archive = is_archivable(
+            phase="call", tmp_path=None, artefacts_dir="/tmp/artefacts"
+        )
+        assert should_archive is False
 
     def test_should_say_is_not_archivable_without_an_artefacts_dir(self, tmp_path):
-        assert is_archivable(phase="call", tmp_path=tmp_path, artefacts_dir=None) is False
+        should_archive = is_archivable(
+            phase="call", tmp_path=tmp_path, artefacts_dir=None
+        )
+        assert should_archive is False
