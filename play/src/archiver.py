@@ -1,6 +1,6 @@
 import shutil
 import uuid
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -18,7 +18,7 @@ def archive(*, phase, tmp_path, test_name, artefacts_dir, timestamp):
     return dest
 
 
-def _avoiding_copy_tree_race_condition() -> Callable[[Any, Iterable[str]], set[str]]:
+def _avoiding_copy_tree_race_condition() -> Callable[[Any, list[str]], set[str]]:
     return shutil.ignore_patterns(
         ".venv",
         "__pycache__",
