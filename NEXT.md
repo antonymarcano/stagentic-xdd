@@ -70,7 +70,26 @@ diff. The JSONL already carries the full tool input. TDD in `play`
 (`claude_transcriber.py`) — extend the current transcriber, rather than waiting on
 the ground-up rewrite in ADR 0014.
 
-## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 4. Observed Misstep: Added multiple cases to a test all at once
+
+Introducing a parametrised `case` is introducing a test, so adding more than one
+case at once writes several failing tests before any production change — the same
+smallest-step break as composing several plain test methods up front. A `case`
+earns its place only to remove or avoid duplication, and lands across two commits:
+
+1. **Refactor** the existing single test into the parametrised shape over its one
+   present case — behaviour-preserving, no new assertion (structural).
+2. **Add** the next case as its own behavioural commit; one case per commit
+   thereafter.
+
+**Still to do:**
+- Add a scenario to `spec/tests/test_red_green_commit.py` that judges an agent
+  introducing cases this way — one at a time, refactor-first — rather than
+  landing a multi-case parametrised block in a single step.
+- Work out how to build the scene that recreates the misstep: the opening
+  workspace state that tempts an agent into adding several cases at once.
+
+## 5. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
 scenario many times and tallying per-run outcomes. Until this lands, an interim
@@ -87,7 +106,7 @@ Per run, capture the pytest result plus the scenario's signals (skill loaded; th
 production shape). This makes experiments (baseline vs B, gateway variants)
 reproducible rather than one-off.
 
-## 5. Contract-test ClaudeCli's options
+## 6. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
@@ -98,7 +117,7 @@ verifying it does what we expect against the real CLI, one at a time.
 move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 6. Pin and record reasoning effort and the context window
+## 7. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -135,7 +154,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 7. Improvement plan working approach
+## 8. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -218,7 +237,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 8. Improvement plan
+## 9. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
