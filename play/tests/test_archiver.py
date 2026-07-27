@@ -125,3 +125,6 @@ class TestShouldArchive:
 
     def test_should_not_hold_outside_the_call_phase(self, tmp_path):
         assert should_archive(phase="setup", tmp_path=tmp_path, artefacts_dir=str(tmp_path)) is False
+
+    def test_should_not_hold_without_a_workspace(self):
+        assert should_archive(phase="call", tmp_path=None, artefacts_dir="/tmp/artefacts") is False
