@@ -30,6 +30,7 @@ class TestArchiver:
 
     @pytest.mark.parametrize("transient", [
         case("venv", transient=".venv"),
+        case("pycache", transient="__pycache__"),
     ])
     def test_should_exclude_transient_dirs_from_the_archive(self, tmp_path, transient):
         workspace = tmp_path / "workspace"
