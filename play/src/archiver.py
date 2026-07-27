@@ -28,9 +28,23 @@ def archive(*,
             artefacts_dir: str,
             timestamp: str
             ) -> Path:
-    dest = Path(artefacts_dir) / f"{timestamp}-{test_name}-{uuid.uuid4().hex[:8]}"
-    shutil.copytree(tmp_path, dest, ignore=_avoiding_copy_tree_race_condition())
-    return dest
+    at_destination = _destination_for(
+        artefacts_dir, test_name, timestamp
+    )
+    _archive_content_for(tmp_path, at_destination)
+    return at_destination
+
+
+def _destination_for(artefacts_dir: str, test_name: str, timestamp: str) -> Path:
+    return Path(artefacts_dir) / f"{timestamp}-{test_name}-{uuid.uuid4().hex[:8]}"
+
+
+def _archive_content_for(tmp_path: Path, dest: Path):
+    shutil.copytree(
+        tmp_path,
+        dest,
+        ignore=_avoiding_copy_tree_race_condition()
+    )
 
 
 def _avoiding_copy_tree_race_condition() -> Callable[[Any, list[str]], set[str]]:
