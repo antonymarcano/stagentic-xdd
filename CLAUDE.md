@@ -14,9 +14,8 @@ with what to read *before* you act on it. When a trigger applies, open the
 resource first; the line is a pointer, not a substitute for it.
 
 - When starting a session, or a prompt is open-ended ("let's continue",
-  "what next?"): read [`NEXT.md`](NEXT.md) and
-  [`docs/working-practices.md`](docs/working-practices.md) first. If NEXT.md is
-  missing, ask what to work on.
+  "what next?"): read [`docs/working-practices.md`](docs/working-practices.md)
+  first.
 - When making or acting on an architectural decision: read the relevant ADR in
   [`docs/architecture/decisions/`](docs/architecture/decisions/) first. Accepted
   ADRs must be adhered to; proposed ones are still under evaluation — possibly
@@ -38,12 +37,6 @@ resource first; the line is a pointer, not a substitute for it.
 - When a real-agent run reveals a misstep: read
   [`docs/lessons/TEMPLATE.md`](docs/lessons/TEMPLATE.md) first and record the
   lesson per [ADR 0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md).
-
-NEXT.md is not a backlog. When a step from it lands, propose updating
-it to reflect the new state — delete what's done, surface what's next.
-When a NEXT.md item crystallises into an architectural direction
-(proposed or accepted), migrate it to an ADR and replace it with what
-comes after.
 
 ## Development pattern: TDAB
 
