@@ -43,7 +43,6 @@ def pytest_runtest_makereport(item, call):
     artefacts_dir = item.config.getoption("--.artefacts-dir")
     if is_archivable(phase=call.when, tmp_path=tmp_path, artefacts_dir=artefacts_dir):
         archive(
-            phase=call.when,
             tmp_path=tmp_path,
             test_name=item.name,
             artefacts_dir=artefacts_dir,

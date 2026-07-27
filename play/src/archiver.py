@@ -22,9 +22,7 @@ def is_archivable(*,
         )
 
 
-def archive(*, phase, tmp_path, test_name, artefacts_dir, timestamp):
-    if phase != "call" or artefacts_dir is None or tmp_path is None:
-        return None
+def archive(*, tmp_path: Path, test_name: str, artefacts_dir: str, timestamp: str) -> Path:
     dest = Path(artefacts_dir) / f"{timestamp}-{test_name}-{uuid.uuid4().hex[:8]}"
     shutil.copytree(tmp_path, dest, ignore=_avoiding_copy_tree_race_condition())
     return dest

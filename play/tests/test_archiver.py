@@ -24,7 +24,7 @@ class TestArchiver:
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
-        dest = archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
+        dest = archive(tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
         assert (dest / "transcript.md").read_text() == "some content"
 
@@ -41,7 +41,7 @@ class TestArchiver:
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
-        dest = archive(phase="call", tmp_path=workspace, test_name="test_foo",
+        dest = archive(tmp_path=workspace, test_name="test_foo",
                        artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
         assert (dest / "transcript.md").exists()
@@ -54,7 +54,7 @@ class TestArchiver:
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
-        dest = archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
+        dest = archive(tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
         assert dest.parent == artefacts_dir
         assert dest.name.startswith("20260527-101638-test_foo")
@@ -65,7 +65,7 @@ class TestArchiver:
         artefacts_dir = tmp_path / ".artefacts"
         artefacts_dir.mkdir()
 
-        dest = archive(phase="call", tmp_path=workspace, test_name="test_foo",
+        dest = archive(tmp_path=workspace, test_name="test_foo",
                        artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
         suffix = dest.name.rsplit("-", 1)[-1]
@@ -81,42 +81,13 @@ class TestArchiver:
             (ws / "transcript.md").write_text(name)
             return ws
 
-        first = archive(phase="call", tmp_path=workspace_named("run-a"), test_name="test_foo",
+        first = archive(tmp_path=workspace_named("run-a"), test_name="test_foo",
                         artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
-        second = archive(phase="call", tmp_path=workspace_named("run-b"), test_name="test_foo",
+        second = archive(tmp_path=workspace_named("run-b"), test_name="test_foo",
                          artefacts_dir=str(artefacts_dir), timestamp="20260527-101638")
 
         assert first != second
         assert first.exists() and second.exists()
-
-    def test_archive_does_nothing_outside_call_phase(self, tmp_path):
-        workspace = tmp_path / "workspace"
-        workspace.mkdir()
-        artefacts = tmp_path / ".artefacts"
-        artefacts.mkdir()
-
-        archive(phase="setup", tmp_path=workspace, test_name="test_foo", artefacts_dir=str(artefacts), timestamp="20260527-101638")
-
-        assert list(artefacts.iterdir()) == []
-
-    def test_archive_does_nothing_when_tmp_path_is_none(self, tmp_path):
-        artefacts_dir = tmp_path / "artefacts"
-        artefacts_dir.mkdir()
-
-        archive(phase="call", tmp_path=None, test_name="test_foo",
-                artefacts_dir=artefacts_dir, timestamp="20260527-120000")
-
-        assert list(artefacts_dir.iterdir()) == []
-
-    def test_archive_does_nothing_when_artefacts_dir_is_not_set(self, tmp_path):
-        workspace = tmp_path / "workspace"
-        workspace.mkdir()
-        artefacts = tmp_path / ".artefacts"
-        artefacts.mkdir()
-
-        archive(phase="call", tmp_path=workspace, test_name="test_foo", artefacts_dir=None, timestamp="20260527-101638")
-
-        assert list(artefacts.iterdir()) == []
 
 
 class TestIsArchivable:
