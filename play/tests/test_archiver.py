@@ -8,7 +8,7 @@ from stagentic.test.cases import case
 from archiver import archive, current_timestamp, is_archivable
 
 
-class TestArchiver:
+class TestCurrentTimestamp:
     def test_current_timestamp_format(self):
         assert re.fullmatch(r"\d{8}-\d{6}", current_timestamp())
 
@@ -17,6 +17,8 @@ class TestArchiver:
             current_timestamp()
         mock_datetime.now.assert_called_once_with(UTC)
 
+
+class TestArchive:
     def test_archive_copies_workspace_to_timestamped_folder(self, tmp_path):
         workspace = tmp_path / "workspace"
         workspace.mkdir()
