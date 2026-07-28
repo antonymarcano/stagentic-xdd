@@ -121,7 +121,102 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 7. Improvement plan working approach
+## 7. Simplify the dev commands with a build tool
+
+The "before any commit" gate — test → lint → mutation — and the levels of test and
+check (unit, contract, integration, the spec configs, focused/full mutation, the full
+baseline) are currently sequenced by hand and documented as prose in
+[COMMANDS.md](COMMANDS.md). In a JVM project this would be a build script (`gradle
+build` runs compile → test → checks in one command). Python has no single equivalent,
+and `uv` (unlike cargo/gradle) has no built-in task runner. This item explores encoding
+the levels and the gate as named tasks. **Choice TBC — this will mature into an ADR
+after further discussion.**
+
+### Options considered
+
+- **`poethepoet` (poe)** — tasks in `pyproject.toml` (`[tool.poe.tasks]`), run via
+  `uv run poe <task>`. Most native to the uv + pyproject setup, but per-pyproject and
+  Python-only, with no natural root to orchestrate across `play`/`spec`/`stagentic-test`.
+- **`just`** — a `justfile` of recipes; recipe-with-dependencies gives a task DAG (like
+  Gradle's), `just --list` gives discoverability (like `gradle tasks`), and it is
+  polyglot. Scoped to this repo, a single **root `justfile`** orchestrating the
+  sub-projects through `uv run --directory …` is the cleanest shape — no import/module
+  machinery (that was only for cross-repo reuse, which we've decided we don't need).
+- **`nox`** (`noxfile.py`) — session-based; only worth it for matrix testing across
+  Python versions or dist/build steps. Overkill for chaining checks.
+
+**Current lean: `just`, single root `justfile`.** `poe` is the fallback if we'd rather
+keep tasks in `pyproject.toml`.
+
+### Shape (levels as recipes, composites via dependencies)
+
+Illustrative, not exhaustive:
+
+```make
+lint: lint-play lint-spec lint-helpers
+play-unit:    uv run --directory play pytest -m "not contract and not integration"
+play-full:    uv run --directory play pytest
+helpers:      uv run --directory stagentic-test pytest
+spec:         uv run --directory spec pytest tests
+spec-critic:  uv run --directory spec pytest tests --inspector=critic
+spec-real:    uv run --directory spec pytest tests --agent=real
+mutate module:  uv run --directory play mutmut run '{{module}}*'
+mutate-all:     uv run --directory play mutmut run
+
+check: play-unit lint                        # fast, gated
+baseline: play-full play-integration helpers spec spec-critic spec-real
+build: lint baseline mutate-all              # the gradle-build analogue
+```
+
+Recipe dependencies run first and abort on the first failure, so the gate's ordering
+comes for free; `just --list` documents the levels.
+
+### The gating, precisely
+
+- **Mutation must follow a green baseline** — correctness, not economy: mutation testing
+  measures whether tests kill mutants, so it is meaningless on red.
+- **test → lint is fail-fast economy, not a dependency** — linting a red tree isn't
+  wrong, just wasted; we fix behaviour before polishing style.
+- **Mutation depends on *tests*, not on *lint*** — a lint failure doesn't invalidate
+  mutation results; lint sits before mutation only to fail cheap. So: tests gate
+  everything; lint and mutation both need green tests but are independent of each other.
+
+### `build` vs the current scoped rules
+
+`gradle build` feels cheap to re-run because Gradle is **incremental and cached** — it
+skips work whose inputs didn't change. A `just build` here has none of that: `baseline`
+hits **real claude** (spec-critic, spec-real) and `mutate-all` is a full sweep, so a
+full `build` is minutes and network-dependent every time. That is exactly why the
+current "before any commit" rules in [CLAUDE.md](CLAUDE.md) are **scoped** (single test
+file → just that file; play-src change → full baseline) rather than always-everything.
+
+So the real decision is **what runs when**, not the recipe:
+
+- **Fast vs full split** — `check` (lint + unit) for routine commits; `build` (full)
+  before significant commits or in CI.
+- **Automated git hook vs manual** — the Python `pre-commit` framework can run a task on
+  `git commit`, but it must stay **fast** (ruff on staged files, maybe the unit lane);
+  the full baseline and mutation must never live in a git hook (every commit would stall
+  for minutes and call real claude). So: hook → `check`; `build` stays a task you invoke.
+- **Scoped judgement vs always-full** — keep the cheaper scoped rules (a human/agent
+  picks scope) or go always-full (simpler, slow, no caching to rescue it).
+
+### What a runner cannot encode
+
+The runner gates a command's exit code; it cannot make the mutation **judgement** — a
+survivor means *subtract the speculative code* (or document an accepted-mutation), not
+"add a test". That call stays with the human/agent (see
+[working-practices](docs/working-practices.md)).
+
+### Open decisions (for the ADR)
+
+1. Tool: `just` (lean) vs `poe`.
+2. `baseline` parallelism: it is deliberately parallel today (six suites at once, ≈ one
+   scenario's wall-clock); `just` runs dependencies **sequentially**, so a parallel
+   `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
+3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
+
+## 8. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -204,7 +299,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 8. Improvement plan
+## 9. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
