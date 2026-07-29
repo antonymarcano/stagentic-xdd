@@ -155,10 +155,11 @@ class TestCritic:
 
             session_that_passes.run.assert_called_once_with(
                 prompt=matching(all_of(
-                    contains_string(f"Reference scene: {task_to_evaluate / 'scene'}\n"),
+                    contains_string(f"Reference Scene: {task_to_evaluate / 'scene'}\n"),
                     contains_string(
-                        "The reference scene is the canonical end-state; "
-                        "for characteristics about the workspace, judge by equivalence to it."
+                        "The Reference Scene is the canonical end-state; "
+                        "for characteristics about the workspace, judge by equivalence to it "
+                        "(not necessarily exactly the same)."
                     ),
                 )),
                 working_dir=ANY, transcript_path=ANY, additional_dirs=ANY,

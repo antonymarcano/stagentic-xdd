@@ -37,7 +37,6 @@ Out of scope for now is the outer loop.
 ## Current status: a work in progress
 
 Currently, a basic Red→Green chain is implemented. Refactoring is yet to be implemented.
-Immediate developments are documented in [`NEXT.md`](NEXT.md).
 
 This plugin is being used as the test-subject to help drive out a framework for applying
 BDD/TDD to AI skills; that framework is grown in-repo (`play/` and `stagentic-test/`) and

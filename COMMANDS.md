@@ -2,6 +2,14 @@
 
 Key developer commands for this repo. All commands run from the repo root.
 
+**Run each command exactly as written — no added filtering, piping, or scaffolding**
+(`| grep …`, `; echo "EXIT=$?"`, `> file 2>&1`, and the like). Filtering risks hiding
+the output you actually need, forcing a second run — and several commands here are
+expensive (real-agent runs, mutation sweeps), so a wasted re-run costs real time and
+money. Appending `; …` or `| …` also turns an allowlisted command into a compound one,
+which prompts for permission (each part is checked separately). Run it whole, read all
+of it, then decide.
+
 ## Linting
 
 ```
@@ -74,14 +82,16 @@ uv run --directory spec pytest tests --agent=real
 uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 ```
 
-### Real-agent recurrence batch (interim — superseded by the N× gateway in NEXT.md)
+### Real-agent recurrence batch (interim)
 
 Two helper scripts in [`scripts/`](scripts) run a scenario N× against the real
 agent and tally the outcomes — interim tooling for measuring how often a lesson's
-misstep recurs, superseded by the play N× gateway (NEXT.md item 2).
+misstep recurs.
 
 **Run** — N parallel real-agent runs of one scenario, artefacts archived under
-`spec/.artefacts`:
+`spec/.artefacts`. Invoke it from the **repo root with the relative path** — that
+matches the permission allowlist (`Bash(bash scripts/run-recurrence-batch.sh*)`) and
+runs without a prompt; an absolute path does not match and will prompt:
 
 ```
 bash scripts/run-recurrence-batch.sh [pytest-node] [count] [artefacts-dir]
@@ -89,22 +99,27 @@ bash scripts/run-recurrence-batch.sh [pytest-node] [count] [artefacts-dir]
 
 Defaults: the write-order scenario
 (`tests/test_red_green_commit.py::TestRedGreenCommit::test_write_a_failing_test`),
-`count=10`, and `artefacts-dir=.artefacts`. Keep batches separate by naming a
-subfolder per batch at run time — `.artefacts/<batch-name>` — rather than
-adjacent `.artefacts-*` dirs; all artefacts stay under `.artefacts`. Launches
-stagger by 100ms — the shortest stagger that avoids the archive copytree race
-under parallel runs (100ms clean at 30 runs; 50ms flakes ~2/30).
+`count=10`, and `artefacts-dir=.artefacts`. Pass the whole file
+(`tests/test_red_green_commit.py`) as the pytest-node to run every scenario in it on
+each launch. Keep batches separate by naming a subfolder per batch at run time —
+`.artefacts/<batch-name>` — rather than adjacent `.artefacts-*` dirs; all artefacts
+stay under `.artefacts`. `artefacts-dir` is relative to `spec/`, so
+`.artefacts/<batch-name>` lands at `spec/.artefacts/<batch-name>`. Launches fire
+simultaneously — no stagger.
 
 **Tally** — count the runs in an artefacts dir and how many failed a named critic
-characteristic, listing the failing artefact folders:
+characteristic, listing the failing artefact folders. Invoke it the same way (repo
+root, relative path):
 
 ```
 bash scripts/tally-recurrence-batch.sh [characteristic] [artefacts-dir]
 ```
 
-Defaults: the write-order characteristic and `spec/.artefacts`. Tallies every run
-currently in the artefacts dir (cumulative across batches — clear it between
-batches for a per-batch count).
+Defaults: the write-order characteristic and `spec/.artefacts`. Note `artefacts-dir`
+here is relative to the **repo root** (not `spec/`), so pass the full path — e.g.
+`spec/.artefacts/<batch-name>` — to tally a batch the run step wrote to
+`.artefacts/<batch-name>`. Tallies every run currently in the artefacts dir
+(cumulative across batches — clear it between batches for a per-batch count).
 
 **When a batch deviates from the established rate**, check
 [status.claude.com](https://status.claude.com/) for an incident (degraded

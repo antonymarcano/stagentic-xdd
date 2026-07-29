@@ -4,25 +4,87 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Isolate what carries the xdd skill — drop the Workflow, try a principles framing
+## 1. Minimise the xdd skill's `# Workflow` — proven on Opus 4.8
 
-The committed xdd skill drove the write-order misstep to 0/100 with a
-compose→evaluate→write Workflow, a read-first step, motivation, and the TDD Model
-corrections — but which parts are load-bearing is untested (see this
-[lesson](docs/lessons/20260628-1800-write-the-failing-test-before-the-production-code/lesson.md#future-experiments-to-try)).
-Measure variations
-against the committed wording with the batch/tally scripts
-([COMMANDS.md](COMMANDS.md)): snapshot each, run to n=100 (alternating against the
-committed wording to cancel time/load drift); the go-live bar is ≤1/100 total
-failures.
+**Why.** We are on Opus 4.8; Opus 5 is available. We want the *minimum* skill
+proven on 4.8, then to test that minimum on Opus 5. What we learn may show how a
+self-healing approach to building the skill can work.
 
-- **Drop the Workflow section**, keeping only the "read any related test/code
-  first" directive alongside the Model corrections and motivation — does
-  write-order hold at ~0/100 without the procedural loop?
-- **Replace the workflow with a set of principles**, framed as "A good
-  Test-Driven Developer always follows these principles…" followed by a list of
-  principles rather than a procedure — does a principles framing hold as well as
-  the workflow?
+**Goal (exploratory).** See how much of the `# Workflow` section can be removed
+while **both** scenarios in
+[`test_red_green_commit.py`](spec/tests/test_red_green_commit.py) still pass their
+**full scorecard** 100/100 — not write-order alone. Not a fixed candidate list, but
+a failure-driven progression that adds back the least guidance that heals each
+failure — almost a self-healing lifecycle:
+
+1. **Can it all go?** Remove the entire `# Workflow` section — *including* the
+   read-first step — leaving the motivation and the Model corrections.
+2. **Can all but read-first go?** If step 1 fails, restore only
+   `Read any related test first and existing code mentioned by the task.` as a
+   standalone line.
+3. **Does it need principles?** If step 2 fails, add back the least
+   principles-based guidance that addresses the observed failure mode — dictated by
+   how the failure occurs (the cause table), not pre-written.
+
+Scenario 2 (make-the-test-pass) is where "Fake-It" earns its place; it lives in the
+Model corrections, which stay, so it is not what this experiment removes — but watch
+it, since a formula-not-literal failure there would point at guidance the Workflow
+was quietly reinforcing.
+
+**Method — alternating A/B, fail-fast, balanced.** Measure each step's candidate
+against the committed wording as a live control, swapping the on-disk `SKILL.md`
+between arms so time/load drift hits both equally (a divergence is then real). Batch
+and tally with the recurrence scripts ([COMMANDS.md](COMMANDS.md)); the tally's
+full-pass count is the metric.
+
+- **Paired waves.** Each wave runs 10 procs per arm (10 concurrent), each proc
+  running both scenarios. Up to 10 waves = **100 per arm**; reassess if reached.
+- **Equal totals.** Both arms complete every wave before any stop decision, so the
+  arms stay balanced — if the control batch fails, the candidate batch still runs
+  that wave as a balancing batch.
+- **Fail-fast.** A single full-scorecard failure in either arm ends the run after
+  the current (balanced) pair — no further waves.
+  - Candidate fails while control clean → this step's removal went too far → move to
+    the next step (heal with the minimum addition).
+  - Control fails too → time/load or upstream drift, not attributable → stop, check
+    [status.claude.com](https://status.claude.com/), re-run the window.
+
+**Bar:** 100/100 full-pass — every characteristic on both scenarios, each scenario
+sampled 100 times per arm.
+
+**Runner.** A candidate-file-driven driver — saved at
+`spec/.artefacts/isolate-workflow/driver.sh` (gitignored) — launched once in the
+background. It takes the step's candidate `SKILL.md`, runs the paired-wave ladder
+against the committed control, and restores the committed file on any exit. It
+derives the repo root from its own location, so it is session-independent. Generate
+each step's candidate from the committed file:
+- **step 1 (all gone):** `awk '/^# Workflow$/{s=1} /^# Model corrections$/{s=0} !s'`
+- **step 2 (keep read-first):** as step 1, but insert the read-first line where the
+  `# Workflow` heading was.
+
+**Before launching (verify).**
+- `SKILL.md` is git-clean — it is the control arm. The driver aborts on a dirty
+  tree unless `FORCE=1`.
+- Wave 1 produces **20 critiques per arm** (both scenarios): scenario 2 is
+  `@pytest.mark.real_agent`, scenario 1 is unmarked — confirm neither is
+  deselected under `--agent=real`. The driver warns when a wave's critique count
+  is not 20.
+- The tally's skill-load grep (`Launching skill: stagentic-xdd:xdd`) matches the
+  real transcripts.
+- A snapshot-integrity marker is detectable in the transcript — else rely on the
+  driver's swap ordering to attribute each run to its arm.
+
+This is a measurement experiment on `SKILL.md` wording, not a code change — the
+commit/mutation/xdd-TDD gates do not apply. The only thing that lands is adopting
+the leanest `SKILL.md` that holds 100/100 on Opus 4.8 — then validating it on Opus 5.
+
+**Reporting.** The driver prints a pass/fail summary after every paired 10×10 wave
+(this-wave and cumulative counts, per arm). On completion — pass or fail — compose
+a summary table of the pass/fail counts per arm and scenario, and for **every**
+failing run a row naming its cause: the arm, scenario, artefact folder, the failed
+scorecard characteristic, and the concrete reason (from that run's `critique.md` /
+transcript — e.g. "production written before the test", "returned a formula, not a
+literal"). A clean run still gets the table (all-pass, no cause rows).
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
@@ -39,24 +101,41 @@ diff. The JSONL already carries the full tool input. TDD in `play`
 (`claude_transcriber.py`) — extend the current transcriber, rather than waiting on
 the ground-up rewrite in ADR 0014.
 
-## 3. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 3. Observed Misstep: Added multiple cases to a test all at once
+
+Introducing a parametrised `case` is introducing a test, so adding more than one
+case at once writes several failing tests before any production change — the same
+smallest-step break as composing several plain test methods up front. A `case`
+earns its place only to remove or avoid duplication, and lands across two commits:
+
+1. **Refactor** the existing single test into the parametrised shape over its one
+   present case — behaviour-preserving, no new assertion (structural).
+2. **Add** the next case as its own behavioural commit; one case per commit
+   thereafter.
+
+**Still to do:**
+- Add a scenario to `spec/tests/test_red_green_commit.py` that judges an agent
+  introducing cases this way — one at a time, refactor-first — rather than
+  landing a multi-case parametrised block in a single step.
+- Work out how to build the scene that recreates the misstep: the opening
+  workspace state that tempts an agent into adding several cases at once.
+
+## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
 scenario many times and tallying per-run outcomes. Until this lands, an interim
 10× command in [COMMANDS.md](COMMANDS.md) runs the real-agent scenarios at 10-way
-concurrency with a 100ms launch stagger (the shortest that avoids the archive
-copytree race); it launches but does not tally, so the signals (did the skill
+concurrency with no launch stagger; it launches but does not tally, so the signals (did the skill
 load; literal vs formula) are read per run by hand.
 
 Make it a first-class mechanism in **play** — framework work, not a spec helper or
 a shell loop (cf. "Review later: move scene management to play"). Run a named
-scenario N times with capped concurrency — defaulting to the interim command's
-100ms launch stagger — and return a per-run tally and pass-rate.
+scenario N times with capped concurrency and return a per-run tally and pass-rate.
 Per run, capture the pytest result plus the scenario's signals (skill loaded; the
 production shape). This makes experiments (baseline vs B, gateway variants)
 reproducible rather than one-off.
 
-## 4. Contract-test ClaudeCli's options
+## 5. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
@@ -67,7 +146,7 @@ verifying it does what we expect against the real CLI, one at a time.
 move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 5. Pin and record reasoning effort and the context window
+## 6. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -104,7 +183,102 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 6. Improvement plan working approach
+## 7. Simplify the dev commands with a build tool
+
+The "before any commit" gate — test → lint → mutation — and the levels of test and
+check (unit, contract, integration, the spec configs, focused/full mutation, the full
+baseline) are currently sequenced by hand and documented as prose in
+[COMMANDS.md](COMMANDS.md). In a JVM project this would be a build script (`gradle
+build` runs compile → test → checks in one command). Python has no single equivalent,
+and `uv` (unlike cargo/gradle) has no built-in task runner. This item explores encoding
+the levels and the gate as named tasks. **Choice TBC — this will mature into an ADR
+after further discussion.**
+
+### Options considered
+
+- **`poethepoet` (poe)** — tasks in `pyproject.toml` (`[tool.poe.tasks]`), run via
+  `uv run poe <task>`. Most native to the uv + pyproject setup, but per-pyproject and
+  Python-only, with no natural root to orchestrate across `play`/`spec`/`stagentic-test`.
+- **`just`** — a `justfile` of recipes; recipe-with-dependencies gives a task DAG (like
+  Gradle's), `just --list` gives discoverability (like `gradle tasks`), and it is
+  polyglot. Scoped to this repo, a single **root `justfile`** orchestrating the
+  sub-projects through `uv run --directory …` is the cleanest shape — no import/module
+  machinery (that was only for cross-repo reuse, which we've decided we don't need).
+- **`nox`** (`noxfile.py`) — session-based; only worth it for matrix testing across
+  Python versions or dist/build steps. Overkill for chaining checks.
+
+**Current lean: `just`, single root `justfile`.** `poe` is the fallback if we'd rather
+keep tasks in `pyproject.toml`.
+
+### Shape (levels as recipes, composites via dependencies)
+
+Illustrative, not exhaustive:
+
+```make
+lint: lint-play lint-spec lint-helpers
+play-unit:    uv run --directory play pytest -m "not contract and not integration"
+play-full:    uv run --directory play pytest
+helpers:      uv run --directory stagentic-test pytest
+spec:         uv run --directory spec pytest tests
+spec-critic:  uv run --directory spec pytest tests --inspector=critic
+spec-real:    uv run --directory spec pytest tests --agent=real
+mutate module:  uv run --directory play mutmut run '{{module}}*'
+mutate-all:     uv run --directory play mutmut run
+
+check: play-unit lint                        # fast, gated
+baseline: play-full play-integration helpers spec spec-critic spec-real
+build: lint baseline mutate-all              # the gradle-build analogue
+```
+
+Recipe dependencies run first and abort on the first failure, so the gate's ordering
+comes for free; `just --list` documents the levels.
+
+### The gating, precisely
+
+- **Mutation must follow a green baseline** — correctness, not economy: mutation testing
+  measures whether tests kill mutants, so it is meaningless on red.
+- **test → lint is fail-fast economy, not a dependency** — linting a red tree isn't
+  wrong, just wasted; we fix behaviour before polishing style.
+- **Mutation depends on *tests*, not on *lint*** — a lint failure doesn't invalidate
+  mutation results; lint sits before mutation only to fail cheap. So: tests gate
+  everything; lint and mutation both need green tests but are independent of each other.
+
+### `build` vs the current scoped rules
+
+`gradle build` feels cheap to re-run because Gradle is **incremental and cached** — it
+skips work whose inputs didn't change. A `just build` here has none of that: `baseline`
+hits **real claude** (spec-critic, spec-real) and `mutate-all` is a full sweep, so a
+full `build` is minutes and network-dependent every time. That is exactly why the
+current "before any commit" rules in [CLAUDE.md](CLAUDE.md) are **scoped** (single test
+file → just that file; play-src change → full baseline) rather than always-everything.
+
+So the real decision is **what runs when**, not the recipe:
+
+- **Fast vs full split** — `check` (lint + unit) for routine commits; `build` (full)
+  before significant commits or in CI.
+- **Automated git hook vs manual** — the Python `pre-commit` framework can run a task on
+  `git commit`, but it must stay **fast** (ruff on staged files, maybe the unit lane);
+  the full baseline and mutation must never live in a git hook (every commit would stall
+  for minutes and call real claude). So: hook → `check`; `build` stays a task you invoke.
+- **Scoped judgement vs always-full** — keep the cheaper scoped rules (a human/agent
+  picks scope) or go always-full (simpler, slow, no caching to rescue it).
+
+### What a runner cannot encode
+
+The runner gates a command's exit code; it cannot make the mutation **judgement** — a
+survivor means *subtract the speculative code* (or document an accepted-mutation), not
+"add a test". That call stays with the human/agent (see
+[working-practices](docs/working-practices.md)).
+
+### Open decisions (for the ADR)
+
+1. Tool: `just` (lean) vs `poe`.
+2. `baseline` parallelism: it is deliberately parallel today (six suites at once, ≈ one
+   scenario's wall-clock); `just` runs dependencies **sequentially**, so a parallel
+   `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
+3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
+
+## 8. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -187,7 +361,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 7. Improvement plan
+## 9. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -315,27 +489,6 @@ This may become the standard for all files.
   exclude or clean them before the agent runs.
 - The agent's cwd must be the workspace root for `uv run pytest` to
   resolve correctly.
-
-## Very low priority: archive copytree races under parallel runs
-
-`archive` (`play/src/archiver.py`) does an unfiltered `shutil.copytree` of the
-whole agent workspace — including transient `.venv/`, `__pycache__/`,
-`.pytest_cache/`. Under parallel batch runs, a file it has listed can change or
-vanish mid-copy, so `copytree` raises. Because that raise happens in the
-`pytest_runtest_makereport` hook (after the assertion already passed), pytest
-fails the *process* even though the scenario succeeded — a spurious `pytest=FAIL`
-on a run whose scorecard is all-PASS (seen ~2/30 at 10-way concurrency; isolated
-runs are clean). Fix: give the copytree `ignore_patterns('.venv', '__pycache__',
-'.pytest_cache')` (mirrors `_set_opening_scene_for`), TDD'd in `play/`. Relates to
-the transient-artefacts known constraint above.
-
-**Now on the default path (decided 2026-07-10).** `spec` runs parallel by default
-(`addopts = ["-n", "auto"]`, pytest-xdist), so this race is no longer confined to
-ad-hoc batch runs — it can surface on any routine spec run. Decision: **leave the
-priority where it is** and fix only when it actually bites, rather than
-pre-emptively. `-n auto` over the current small scenario set runs at low (~2-way)
-concurrency, where the race is unlikely; revisit if it starts flaking as the
-scenario count grows.
 
 ## Enforcing working-practices via hooks
 

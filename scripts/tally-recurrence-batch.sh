@@ -4,7 +4,7 @@
 # and (optionally) snapshot integrity. Self-contained so a whole tally is one
 # allowlisted call — no ad-hoc inline commands needed.
 #
-# Interim tooling; superseded by the play N× gateway (NEXT.md item 2).
+# Interim tooling.
 #
 # Usage: tally-recurrence-batch.sh [characteristic] [artefacts-dir] [snapshot-marker]
 #   characteristic   critic characteristic to count FAILs of

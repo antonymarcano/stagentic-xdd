@@ -2,7 +2,6 @@
 # Run the current live SKILL.md through B batches of M parallel real-agent runs,
 # all archived under one artefacts folder. For retesting a single wording at
 # scale, unattended (no SKILL swapping — whatever is live is what's measured).
-# Superseded by the play N× gateway (NEXT.md item 2).
 #
 # Usage: run-repeated-batches.sh <artefacts-dir> [batches] [runs] [pytest-node]
 #   artefacts-dir  parent folder relative to spec/, e.g. .artefacts/experiment/my-run
