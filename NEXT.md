@@ -4,25 +4,87 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Isolate what carries the xdd skill — drop the Workflow, try a principles framing
+## 1. Minimise the xdd skill's `# Workflow` — proven on Opus 4.8
 
-The committed xdd skill drove the write-order misstep to 0/100 with a
-compose→evaluate→write Workflow, a read-first step, motivation, and the TDD Model
-corrections — but which parts are load-bearing is untested (see this
-[lesson](docs/lessons/20260628-1800-write-the-failing-test-before-the-production-code/lesson.md#future-experiments-to-try)).
-Measure variations
-against the committed wording with the batch/tally scripts
-([COMMANDS.md](COMMANDS.md)): snapshot each, run to n=100 (alternating against the
-committed wording to cancel time/load drift); the go-live bar is ≤1/100 total
-failures.
+**Why.** We are on Opus 4.8; Opus 5 is available. We want the *minimum* skill
+proven on 4.8, then to test that minimum on Opus 5. What we learn may show how a
+self-healing approach to building the skill can work.
 
-- **Drop the Workflow section**, keeping only the "read any related test/code
-  first" directive alongside the Model corrections and motivation — does
-  write-order hold at ~0/100 without the procedural loop?
-- **Replace the workflow with a set of principles**, framed as "A good
-  Test-Driven Developer always follows these principles…" followed by a list of
-  principles rather than a procedure — does a principles framing hold as well as
-  the workflow?
+**Goal (exploratory).** See how much of the `# Workflow` section can be removed
+while **both** scenarios in
+[`test_red_green_commit.py`](spec/tests/test_red_green_commit.py) still pass their
+**full scorecard** 100/100 — not write-order alone. Not a fixed candidate list, but
+a failure-driven progression that adds back the least guidance that heals each
+failure — almost a self-healing lifecycle:
+
+1. **Can it all go?** Remove the entire `# Workflow` section — *including* the
+   read-first step — leaving the motivation and the Model corrections.
+2. **Can all but read-first go?** If step 1 fails, restore only
+   `Read any related test first and existing code mentioned by the task.` as a
+   standalone line.
+3. **Does it need principles?** If step 2 fails, add back the least
+   principles-based guidance that addresses the observed failure mode — dictated by
+   how the failure occurs (the cause table), not pre-written.
+
+Scenario 2 (make-the-test-pass) is where "Fake-It" earns its place; it lives in the
+Model corrections, which stay, so it is not what this experiment removes — but watch
+it, since a formula-not-literal failure there would point at guidance the Workflow
+was quietly reinforcing.
+
+**Method — alternating A/B, fail-fast, balanced.** Measure each step's candidate
+against the committed wording as a live control, swapping the on-disk `SKILL.md`
+between arms so time/load drift hits both equally (a divergence is then real). Batch
+and tally with the recurrence scripts ([COMMANDS.md](COMMANDS.md)); the tally's
+full-pass count is the metric.
+
+- **Paired waves.** Each wave runs 10 procs per arm (10 concurrent), each proc
+  running both scenarios. Up to 10 waves = **100 per arm**; reassess if reached.
+- **Equal totals.** Both arms complete every wave before any stop decision, so the
+  arms stay balanced — if the control batch fails, the candidate batch still runs
+  that wave as a balancing batch.
+- **Fail-fast.** A single full-scorecard failure in either arm ends the run after
+  the current (balanced) pair — no further waves.
+  - Candidate fails while control clean → this step's removal went too far → move to
+    the next step (heal with the minimum addition).
+  - Control fails too → time/load or upstream drift, not attributable → stop, check
+    [status.claude.com](https://status.claude.com/), re-run the window.
+
+**Bar:** 100/100 full-pass — every characteristic on both scenarios, each scenario
+sampled 100 times per arm.
+
+**Runner.** A candidate-file-driven driver — saved at
+`spec/.artefacts/isolate-workflow/driver.sh` (gitignored) — launched once in the
+background. It takes the step's candidate `SKILL.md`, runs the paired-wave ladder
+against the committed control, and restores the committed file on any exit. It
+derives the repo root from its own location, so it is session-independent. Generate
+each step's candidate from the committed file:
+- **step 1 (all gone):** `awk '/^# Workflow$/{s=1} /^# Model corrections$/{s=0} !s'`
+- **step 2 (keep read-first):** as step 1, but insert the read-first line where the
+  `# Workflow` heading was.
+
+**Before launching (verify).**
+- `SKILL.md` is git-clean — it is the control arm. The driver aborts on a dirty
+  tree unless `FORCE=1`.
+- Wave 1 produces **20 critiques per arm** (both scenarios): scenario 2 is
+  `@pytest.mark.real_agent`, scenario 1 is unmarked — confirm neither is
+  deselected under `--agent=real`. The driver warns when a wave's critique count
+  is not 20.
+- The tally's skill-load grep (`Launching skill: stagentic-xdd:xdd`) matches the
+  real transcripts.
+- A snapshot-integrity marker is detectable in the transcript — else rely on the
+  driver's swap ordering to attribute each run to its arm.
+
+This is a measurement experiment on `SKILL.md` wording, not a code change — the
+commit/mutation/xdd-TDD gates do not apply. The only thing that lands is adopting
+the leanest `SKILL.md` that holds 100/100 on Opus 4.8 — then validating it on Opus 5.
+
+**Reporting.** The driver prints a pass/fail summary after every paired 10×10 wave
+(this-wave and cumulative counts, per arm). On completion — pass or fail — compose
+a summary table of the pass/fail counts per arm and scenario, and for **every**
+failing run a row naming its cause: the arm, scenario, artefact folder, the failed
+scorecard characteristic, and the concrete reason (from that run's `critique.md` /
+transcript — e.g. "production written before the test", "returned a formula, not a
+literal"). A clean run still gets the table (all-pass, no cause rows).
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
