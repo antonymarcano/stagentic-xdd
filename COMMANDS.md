@@ -2,6 +2,14 @@
 
 Key developer commands for this repo. All commands run from the repo root.
 
+**Run each command exactly as written — no added filtering, piping, or scaffolding**
+(`| grep …`, `; echo "EXIT=$?"`, `> file 2>&1`, and the like). Filtering risks hiding
+the output you actually need, forcing a second run — and several commands here are
+expensive (real-agent runs, mutation sweeps), so a wasted re-run costs real time and
+money. Appending `; …` or `| …` also turns an allowlisted command into a compound one,
+which prompts for permission (each part is checked separately). Run it whole, read all
+of it, then decide.
+
 ## Linting
 
 ```
