@@ -27,13 +27,6 @@ code*, where code can change in material ways without a single test failing.
 Every such living mutant is an opportunity for a future change to introduce a
 bug the tests won't catch.
 
-The refactoring pass (tracked in NEXT.md) brings each production file and its
-tests to a reference standard. "Looks well-tested" is a judgement; we want
-evidence that each test constrains the behaviour it covers. Mutation testing
-supplies it: it perturbs the production code and checks whether some test
-fails. A surviving mutant marks behaviour that has slipped past what the tests
-truly demanded — a behaviour no test pins.
-
 Background and motivation: Antony Marcano, "Mutants in the Machine: The AI
 Illusion of Test-Driven Code" —
 https://ideas.riverglide.com/mutants-in-the-machine-the-ai-illusion-of-test-driven-code-37d623642486
