@@ -15,7 +15,7 @@ Your model has some misunderstandings of TDD, which you should override with the
 2. After the test is written, then change the production code so it [fails for the right reason](#failing-for-the-right-reason)
 3. Then run the test.
 
-Failing to adhere to this discipline sets a poor example for the developer that set your goal and lets everyone down. 
+Failing to adhere to this discipline sets a poor example for the developer that set your goal and lets everyone down.
 
 ## Failing for the right reason
 
