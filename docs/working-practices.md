@@ -12,6 +12,16 @@ include at least the commit subject.
 
 Applies to proposals from a person or from an agent.
 
+## Test a behaviour change before committing it
+
+A change that can affect behaviour is committed only after a test confirms it
+green — testing gates the commit, it is not a step whose order is negotiable.
+There is no "commit now, validate later": an untested change that proves wrong has
+already entered the history, and the record then claims a result no one checked.
+
+Guidance measured empirically (e.g. `SKILL.md` wording) is no exception — the
+measurement run is its test, and it must pass before the change lands.
+
 ## Separate behavioural and structural changes
 
 Each commit either changes observable behaviour (new test, new
