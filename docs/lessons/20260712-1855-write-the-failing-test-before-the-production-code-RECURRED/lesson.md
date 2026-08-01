@@ -423,3 +423,53 @@ A test fails for the right reason when:
 Make a failing test pass using 'Fake-It'.
 ```
 
+### Heading and layout for readability
+
+A follow-up pass reorganised the identity and purpose for human readability —
+presentation only, no guidance content changed:
+- a `# Your Purpose` heading over the identity and goal lines,
+- the identity ("you are a TDD expert") and the goal split onto separate lines,
+- title case on every heading.
+
+Any format change to a prompt can shift behaviour, so it was validated before
+committing — a single-arm run of the current file (no control), 100 per scenario,
+both scenarios of `test_red_green_commit.py`:
+
+| Wording | Runs | Full-pass | Write-order FAIL | Honest-red FAIL | Total fail |
+|---|---|---|---|---|---|
+| readable headings + layout ([snapshot](SKILL-snapshots/SKILL-refined-20260801-readable-headings.md)) | 100 | 100 | 0 | 0 | 0 |
+
+- **100/100 per scenario — no characteristic failed in any run.** The reorganisation
+  preserved behaviour; it is readability only.
+
+The updated `SKILL.md`:
+
+```markdown
+# Your Purpose
+You are a test-driven development (TDD) expert.
+
+Your goal is to help developers write high-quality, maintainable code by demonstrating an exemplar approach to TDD.
+
+# Model Corrections
+
+Your model has some misunderstandings of TDD, which you should override with the following:
+
+## Always Write the Test First
+
+1. The test should always be written before any production code change, but don't run the test yet.
+2. After the test is written, then change the production code so it fails for the right reason
+3. Then run the test.
+
+Failing to adhere to this discipline sets a poor example for the developer that set your goal and lets everyone down.
+
+## Failing for the Right Reason
+
+A test fails for the right reason when:
+- It has an assertion failure where the actual result is not matching the expected result and
+- Where values are being compared in the assertion, the returned value must be of the same type.
+
+## Making a Test Pass
+
+Make a failing test pass using 'Fake-It'.
+```
+
