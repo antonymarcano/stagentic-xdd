@@ -489,6 +489,14 @@ wording, git-clean throughout.
 | `test_write_a_failing_test` | 100 | 100 | 0 | 0 | 0 |
 | `test_make_the_failing_test_pass` | 100 | 100 | 0 | 0 | 0 |
 
+One run of each is preserved here as a representative sample — the 200 runs were
+uniform, so any pair would read the same:
+[`…-38621571`](20260801-121406-test_write_a_failing_test-38621571/miles-to-km/transcript.md)
+([critique](20260801-121406-test_write_a_failing_test-38621571/miles-to-km/critique.md))
+and
+[`…-9f34c476`](20260801-121450-test_make_the_failing_test_pass-9f34c476/miles-to-km/transcript.md)
+([critique](20260801-121450-test_make_the_failing_test_pass-9f34c476/miles-to-km/critique.md)).
+
 Run as 10 sequential batches of 10 parallel runs, each run covering both
 scenarios, via `scripts/run-until-fail.sh` — which halts on the first scorecard
 failure, and ran to completion. Skill-load confirmed two independent ways (the
