@@ -4,7 +4,33 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Capture code-change diffs in the run transcript — Edit still to do
+## 1. Upgrade the pinned CLI — blocked on trust-marking
+
+The pin sits at 2.1.191. The current release is 2.1.220, and the gap widens with
+every week we leave it.
+
+2.1.193 added a workspace-trust gate: an untrusted workspace's
+`.claude/settings.json` `permissions.allow` is ignored. Every scenario runs in a
+fresh tmp workspace, which is never trusted, so the scene's `Bash(uv run pytest*)`
+grant is dropped and headless `-p` denies the command — the agent cannot run its
+test.
+
+ADR [0016](docs/architecture/decisions/0016-trust-the-agent-workspace-for-headless-runs.md)
+(Proposed) is the way through: `ClaudeCli` marks the workspace trusted before
+launch, writing `projects["<workspace>"].hasTrustDialogAccepted = true` to the
+user-level Claude config. Two complications it names:
+
+- **Concurrency** — scenarios run in parallel under xdist, so the write must be
+  atomic or locked.
+- **Accumulation** — one entry per tmp workspace per run, unbounded without
+  pruning.
+
+TDD in `play/`, with the regression test in the integration-marked suite. Then
+move the pin per ADR
+[0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md) and re-run
+the baseline.
+
+## 2. Capture code-change diffs in the run transcript — Edit still to do
 
 The captured `transcript.md` (produced by `ClaudeTranscriber`) renders a tool use
 as only its `file_path`, so what the agent changed can be invisible to a reviewer
@@ -19,7 +45,7 @@ diff. The JSONL already carries the full tool input. TDD in `play`
 (`claude_transcriber.py`) — extend the current transcriber, rather than waiting on
 the ground-up rewrite in ADR 0014.
 
-## 2. Observed Misstep: Added multiple cases to a test all at once
+## 3. Observed Misstep: Added multiple cases to a test all at once
 
 Introducing a parametrised `case` is introducing a test, so adding more than one
 case at once writes several failing tests before any production change — the same
@@ -38,7 +64,7 @@ earns its place only to remove or avoid duplication, and lands across two commit
 - Work out how to build the scene that recreates the misstep: the opening
   workspace state that tempts an agent into adding several cases at once.
 
-## 3. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
 scenario many times and tallying per-run outcomes. The shell scripts in
@@ -57,18 +83,14 @@ reproducible rather than one-off.
 The elimination methodology these encode — paired waves, a control arm, stopping
 on contamination — may warrant an ADR alongside the implementation.
 
-## 4. Contract-test ClaudeCli's options
+## 5. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
 (`play/tests/contract/test_claude_cli.py`). Add one contract test per option,
 verifying it does what we expect against the real CLI, one at a time.
 
-**Deferred — versions / CLI upgrade.** ADR 0016 (trust the workspace) and the
-move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
-becomes necessary only on 2.1.193+.
-
-## 5. Pin and record reasoning effort and the context window
+## 6. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -100,7 +122,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 6. Simplify the dev commands with a build tool
+## 7. Simplify the dev commands with a build tool
 
 The "before any commit" gate — test → lint → mutation — and the levels of test and
 check (unit, contract, integration, the spec configs, focused/full mutation, the full
@@ -195,7 +217,7 @@ survivor means *subtract the speculative code* (or document an accepted-mutation
    `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
 3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
 
-## 7. Improvement plan working approach
+## 8. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -278,7 +300,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 8. Improvement plan
+## 9. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -386,7 +408,7 @@ A candidate convention to start from — every public entry point to the
 
 This may become the standard for all files.
 
-## 9. Heading case — a repo-wide convention question
+## 10. Heading case — a repo-wide convention question
 
 `SKILL.md` uses title-case headings; every other heading in the repo is sentence
 case. Neither [`document-style.md`](docs/document-style.md) nor
