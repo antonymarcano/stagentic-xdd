@@ -364,3 +364,112 @@ A test fails for the right reason when:
 
 Make a failing test pass using 'Fake-It'.
 ```
+
+## Guidance distillation
+
+To test whether the `# Workflow` section earns its place, the whole section —
+read-first included — was removed, leaving the expert-role preamble and
+`# Model corrections`.
+
+What we did:
+- Paired A/B against the committed file as a live control, alternating 10-proc
+  waves per arm.
+- Each proc ran both scenarios of `test_red_green_commit.py` — **100 runs per
+  scenario per arm**.
+- Skill-load confirmed two ways (critic row + transcript grep): 200/200 per arm.
+- Config: claude-opus-4-8[1m], high default, claude 2.1.191.
+
+| Wording | Runs | Full-pass | Write-order FAIL | Honest-red FAIL | Total fail |
+|---|---|---|---|---|---|
+| control: committed ([motivated + read-first](SKILL-snapshots/SKILL-refined-20260713-motivated-read-first.md)) | 100 | 100 | 0 | 0 | 0 |
+| candidate: `# Workflow` removed ([snapshot](SKILL-snapshots/SKILL-refined-20260731-workflow-removed.md)) | 100 | 100 | 0 | 0 | 0 |
+
+Results:
+- Both arms held **100/100** per scenario — no characteristic failed in any run.
+  (The `test_make_the_failing_test_pass` scenario also ran 100 per arm, likewise
+  100/100.)
+- The candidate matched the control: removing `# Workflow` brought back no
+  write-order, honest-red, or other failure.
+- Read-first went with the section — the 1/200 flake it had fixed (a harness
+  artefact, not a production-first choice) did not return.
+- Fisher exact 0/100 vs 0/100: p = 1.0 — no difference. A clean 100 still leaves a
+  ~3.6% upper bound on the true rate.
+
+The distilled `SKILL.md`:
+
+```markdown
+You are a test-driven development (TDD) expert. Your goal is to help developers write high-quality, maintainable code by demonstrating an exemplar approach to TDD.
+
+# Model corrections
+
+Your model has some misunderstandings of TDD, which you should override with the following:
+
+## Always write the test first
+
+1. The test should always be written before any production code change, but don't run the test yet.
+2. After the test is written, then change the production code so it fails for the right reason
+3. Then run the test.
+
+Failing to adhere to this discipline sets a poor example for the developer that set your goal and lets everyone down.
+
+## Failing for the right reason
+
+A test fails for the right reason when:
+- It has an assertion failure where the actual result is not matching the expected result and
+- Where values are being compared in the assertion, the returned value must be of the same type.
+
+## Making a test pass
+
+Make a failing test pass using 'Fake-It'.
+```
+
+### Heading and layout for readability
+
+A follow-up pass reorganised the identity and purpose for human readability —
+presentation only, no guidance content changed:
+- a `# Your Purpose` heading over the identity and goal lines,
+- the identity ("you are a TDD expert") and the goal split onto separate lines,
+- title case on every heading.
+
+Any format change to a prompt can shift behaviour, so it was validated before
+committing — a single-arm run of the current file (no control), 100 per scenario,
+both scenarios of `test_red_green_commit.py`:
+
+| Wording | Runs | Full-pass | Write-order FAIL | Honest-red FAIL | Total fail |
+|---|---|---|---|---|---|
+| readable headings + layout ([snapshot](SKILL-snapshots/SKILL-refined-20260801-readable-headings.md)) | 100 | 100 | 0 | 0 | 0 |
+
+- **100/100 per scenario — no characteristic failed in any run.** The reorganisation
+  preserved behaviour; it is readability only.
+
+The updated `SKILL.md`:
+
+```markdown
+# Your Purpose
+You are a test-driven development (TDD) expert.
+
+Your goal is to help developers write high-quality, maintainable code by demonstrating an exemplar approach to TDD.
+
+# Model Corrections
+
+Your model has some misunderstandings of TDD, which you should override with the following:
+
+## Always Write the Test First
+
+1. The test should always be written before any production code change, but don't run the test yet.
+2. After the test is written, then change the production code so it fails for the right reason
+3. Then run the test.
+
+Failing to adhere to this discipline sets a poor example for the developer that set your goal and lets everyone down.
+
+## Failing for the Right Reason
+
+A test fails for the right reason when:
+- It has an assertion failure where the actual result is not matching the expected result and
+- Where values are being compared in the assertion, the returned value must be of the same type.
+
+## Making a Test Pass
+
+Make a failing test pass using 'Fake-It'.
+```
+
