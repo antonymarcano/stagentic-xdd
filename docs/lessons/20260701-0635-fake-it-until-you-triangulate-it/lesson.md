@@ -12,6 +12,9 @@
   - Model: claude-opus-4-8[1m] (1M context window)
   - Reasoning effort: CLI default (high for Opus 4.8), not explicitly set
   - CLI: claude 2.1.191
+  - Re-validated 2026-08-01 on claude-opus-5 (Opus 5 exposes no context-variant
+    suffix), CLI default effort, claude 2.1.191 — 100 runs, no failure of the
+    guarding characteristic
 
 ## Task
 

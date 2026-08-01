@@ -13,6 +13,9 @@
     - Reasoning effort: CLI default (high for Opus 4.8)
     - CLI: claude 2.1.191
     - Validated: 2026-07-11 — 10× real agent + critic under Stage 2 (10/10 strict same-type)
+    - Re-validated 2026-08-01 on claude-opus-5 (Opus 5 exposes no context-variant
+      suffix), CLI default effort, claude 2.1.191 — 100 runs, no failure of the
+      guarding characteristic
 
 ## Task
 

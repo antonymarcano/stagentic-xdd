@@ -4,38 +4,21 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Validate the distilled xdd skill on Opus 5
+## 1. Measuring guidance at scale — what the tooling still needs
 
-The committed `SKILL.md` is the distilled minimum for Opus 4.8 — motivation +
-`# Model corrections`, no `# Workflow` section. Validate that minimum on **Opus 5**:
-does it still hold the full scorecard on **both** scenarios of
-[`test_red_green_commit.py`](spec/tests/test_red_green_commit.py), 100 runs per
-scenario per arm?
-
-**Method.** The same paired-wave A/B, run on Opus 5 as a migration spike — set
-`ANTHROPIC_DEFAULT_OPUS_MODEL` to the Opus 5 id in-shell (committed pin untouched).
-The alternating driver at `spec/.artefacts/isolate-workflow/driver*.sh` swaps the
-on-disk `SKILL.md` between arms and tallies per wave.
-
-- **Holds 100/100** → the minimum survives the model bump; record it in the lesson.
-- **Fails** → self-healing: add back the least guidance that heals the observed
-  failure mode (read-first, then a principles framing), re-measuring each addition —
-  the ladder, now on Opus 5.
-
-**Open threads from the 4.8 work:**
-- The `driver*.sh` scripts proved the method but are one-off, gitignored artefacts
-  with hard-coded waves/baseline. If the elimination method recurs per section or
-  model, it wants a **permanent, parameterised runner** (waves and arms as args,
-  baseline seeded from a live tally) — likely `play` framework work, and possibly an
-  ADR for the elimination methodology itself.
-- Chunk long runs under the session usage limit — a calibrated wave count, optionally
-  stopping on a limit signal (`system/api_retry` surfaced from `ClaudeCli`), since
-  there is no scriptable query for remaining budget.
-- **SKILL heading case (deferred).** The working-tree `SKILL.md` uses title-case
-  headings (`# Your Purpose`, `# Model Corrections`, `## Always Write the Test
-  First`, …); every other heading in the repo is sentence case, so this diverges
-  from convention. Decide keep-vs-revert — behaviour-affecting either way, so the
-  validation run must clear it before it is committed.
+- **A permanent, parameterised runner.** `scripts/run-until-fail.sh` covers
+  single-arm validation and `spec/.artefacts/isolate-workflow/driver*.sh` covers
+  alternating A/B, but the latter are one-off, gitignored artefacts with hard-coded
+  waves and baseline. If the elimination method recurs per section or per model, it
+  wants waves and arms as arguments and a baseline seeded from a live tally — likely
+  `play` framework work, and possibly an ADR for the elimination methodology itself.
+- **`run-until-fail.sh` exits 1 on a clean run.** Its last statement inherits the
+  tally's exit status, and `tally-recurrence-batch.sh` ends on a short-circuit that
+  is false when there are no failures. A clean run and a failed one are
+  indistinguishable by exit code.
+- **Chunk long runs under the session usage limit** — a calibrated wave count,
+  optionally stopping on a limit signal (`system/api_retry` surfaced from
+  `ClaudeCli`), since there is no scriptable query for remaining budget.
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
@@ -419,6 +402,28 @@ A candidate convention to start from — every public entry point to the
   found, network unavailable).
 
 This may become the standard for all files.
+
+## 10. Heading case — a repo-wide convention question
+
+`SKILL.md` uses title-case headings (`# Your Purpose`, `# Model Corrections`,
+`## Always Write the Test First`, …); every other heading in the repo is sentence
+case. Neither [`document-style.md`](docs/document-style.md) nor
+[`writing-style.md`](docs/writing-style.md) states a rule, so there is no
+convention being violated — only one to adopt.
+
+The two are not alike. `SKILL.md` is agent-facing and its wording is measured, so
+changing it is a behaviour change needing a fresh measurement. The rest are
+human-facing, where case is unmeasured style.
+
+Options:
+
+- Document the split in [`document-style.md`](docs/document-style.md) — sentence
+  case for human-facing docs, agent-facing guidance out of scope because its
+  wording is empirically validated.
+- Harmonise the repo to one case — a wide diff across every doc, with no evidence
+  favouring either direction.
+- Change `SKILL.md` to sentence case — discards the current validation and needs
+  re-measuring.
 
 ## Future options
 

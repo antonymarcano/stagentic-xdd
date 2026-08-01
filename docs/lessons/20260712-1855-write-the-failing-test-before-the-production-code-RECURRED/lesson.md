@@ -12,6 +12,8 @@
   - Model: claude-opus-4-8[1m] (1M context window)
   - Reasoning effort: CLI default (high for Opus 4.8), not explicitly set
   - CLI: claude 2.1.191
+  - Re-validated 2026-08-01 on claude-opus-5, CLI default effort, claude 2.1.191
+    — see [*Model migration: Opus 5*](#model-migration-opus-5)
 
 This is a recurrence of
 [the agent writing production code before the failing test](../20260628-1800-write-the-failing-test-before-the-production-code/lesson.md).
@@ -473,4 +475,32 @@ A test fails for the right reason when:
 
 Make a failing test pass using 'Fake-It'.
 ```
+
+## Model migration: Opus 5
+
+The accepted wording was distilled against Opus 4.8. ADR
+[0003](../../architecture/decisions/0003-pin-model-versions.md) treats a model
+bump as a migration, so the distilled `SKILL.md` was re-measured on
+`claude-opus-5` before the pin moved — same CLI (2.1.191), same committed
+wording, git-clean throughout.
+
+| Scenario | Runs | Full-pass | Write-order FAIL | Honest-red FAIL | Total fail |
+|---|---|---|---|---|---|
+| `test_write_a_failing_test` | 100 | 100 | 0 | 0 | 0 |
+| `test_make_the_failing_test_pass` | 100 | 100 | 0 | 0 | 0 |
+
+Run as 10 sequential batches of 10 parallel runs, each run covering both
+scenarios, via `scripts/run-until-fail.sh` — which halts on the first scorecard
+failure, and ran to completion. Skill-load confirmed two independent ways (the
+critic's *invoked the xdd skill* row and a transcript grep): 200/200 both ways,
+no disagreements.
+
+Every characteristic guarding a lesson in this folder passed in all 200 runs, so
+the migration revalidates the whole set, not only this lesson.
+
+**Provenance caveat.** The 4.8 runs recorded their context variant as
+`claude-opus-4-8[1m]`. On Opus 5 no such suffix is available: the `system/init`
+event and the session JSONL both report a bare `claude-opus-5`, so a spawned
+run's context variant is not observable from either source. It is recorded as
+`claude-opus-5` rather than assumed to be the 1M variant.
 
