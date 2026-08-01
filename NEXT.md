@@ -78,25 +78,20 @@ on a lesson's provenance (ADR
 [0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md)).
 What was learned while capturing the first lesson:
 
-- The harness runs resolve to `claude-opus-4-8[1m]` — the **1M context** variant
-  (Opus 4.8 maps to 1M by default). The header's source, `message.model`, records
-  the API id `claude-opus-4-8`, dropping the `[1m]`; the `[1m]` form is visible
-  only in the `system/init` event's `model`.
-- The harness passes no `--effort`, so runs use the CLI **default (high** for
-  Opus 4.8**)**. Effort is absent from both the session JSONL and the
-  `system/init` event, so it can only be recorded as the value the harness sets.
+- **Neither value can be read back from a run.** The session JSONL and the
+  `system/init` event both report a bare model id, with no context-window
+  variant and no effort. Both can only be recorded as what the harness asked for.
+- The harness passes no `--effort`, so runs take the CLI default.
 
 Two pieces of work, each TDD in `play/`:
 
 1. **Pin effort.** Add a `--effort` flag to the harness's `claude -p` invocation
-   (`play/src/claude_cli.py`), pinned to **high** — the current Opus 4.8 default,
-   so this locks in the behaviour the first lessons were captured under rather
-   than changing it. Effort levels are **model-dependent** (Opus 4.8/4.7:
-   `low|medium|high|xhigh|max`; Opus 4.6, Sonnet 4.6: `low|medium|high|max`;
-   Haiku 4.5: no documented effort support), so the flag must be **gated on the
-   resolved model** — never pass `--effort` to a model that does not support it
-   (it would fail the run). `ClaudeCli` therefore needs to know which model it is
-   invoking, or which models support the chosen level.
+   (`play/src/claude_cli.py`), set to the pinned model's own default so the flag
+   records behaviour rather than changes it. Establish that default first.
+
+   Levels are **model-dependent**, so the flag must be **gated on the resolved
+   model** — passing `--effort` to a model that does not support it fails the run.
+   `ClaudeCli` therefore needs to know which model it is invoking.
 2. **Record effort + context.** Extend the versions header (ADR 0017) so the
    transcript records the effort the harness set and the resolved context window
    (the `[1m]` form from the `system/init` event, not the per-message
@@ -336,6 +331,7 @@ don't bury NEXT.md.
 - [ ] `failure_message.py` (and `tests/test_failure_message.py`)
 - [ ] `raise_when.py` (and `tests/test_raise_when.py`)
 - [ ] `scorecard_json_extraction.py` (and `tests/test_scorecard_json_extraction.py`)
+- [ ] `archiver.py` (and `tests/test_archiver.py`)
 - [ ] `inspector.py` — No test yet
 
 A cross-cutting improvement surfaced by the critic extraction — a
@@ -345,7 +341,6 @@ A cross-cutting improvement surfaced by the critic extraction — a
 
 ### `spec/`
 
-- [ ] `archiver.py` (and `tests/test_archiver.py`)
 - [ ] `conftest.py`
 
 ### `Auditor.evaluate` should derive per-row status, not hard-code PASS
@@ -393,25 +388,17 @@ This may become the standard for all files.
 
 ## 9. Heading case — a repo-wide convention question
 
-`SKILL.md` uses title-case headings (`# Your Purpose`, `# Model Corrections`,
-`## Always Write the Test First`, …); every other heading in the repo is sentence
+`SKILL.md` uses title-case headings; every other heading in the repo is sentence
 case. Neither [`document-style.md`](docs/document-style.md) nor
-[`writing-style.md`](docs/writing-style.md) states a rule, so there is no
-convention being violated — only one to adopt.
+[`writing-style.md`](docs/writing-style.md) states a rule, so there is a
+convention to adopt rather than one being broken.
 
-The two are not alike. `SKILL.md` is agent-facing and its wording is measured, so
-changing it is a behaviour change needing a fresh measurement. The rest are
-human-facing, where case is unmeasured style.
+`SKILL.md` is agent-facing and its wording is measured, so changing it needs a
+fresh measurement. Every other doc is human-facing, where case is unmeasured.
 
-Options:
-
-- Document the split in [`document-style.md`](docs/document-style.md) — sentence
-  case for human-facing docs, agent-facing guidance out of scope because its
-  wording is empirically validated.
-- Harmonise the repo to one case — a wide diff across every doc, with no evidence
-  favouring either direction.
-- Change `SKILL.md` to sentence case — discards the current validation and needs
-  re-measuring.
+- Document that split in [`document-style.md`](docs/document-style.md).
+- Harmonise the repo to one case — a wide diff, no evidence either way.
+- Change `SKILL.md` to sentence case, and re-measure.
 
 ## Future options
 
@@ -432,11 +419,12 @@ Options:
 
 ## Known constraints
 
-- Transient artefacts (`.venv/`, `.pytest_cache/`, `__pycache__/`) will
-  be visible to the real agent in the workspace — decide whether to
-  exclude or clean them before the agent runs.
-- The agent's cwd must be the workspace root for `uv run pytest` to
-  resolve correctly.
+- **The opening scene carries transient dirs into the agent's workspace.**
+  `_set_opening_scene_for` filters only `transcript.md`, so an untracked
+  `__pycache__` in a scene dir is copied too — the agent's starting state differs
+  between machines. `uv run pytest` then adds `.venv/` and `.pytest_cache/`.
+  `Archiver` filters all three, so artefacts show none of it. Should the scene
+  copy filter them too?
 
 ## Enforcing working-practices via hooks
 
