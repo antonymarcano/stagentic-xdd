@@ -16,15 +16,12 @@ fresh tmp workspace, which is never trusted, so the scene's `Bash(uv run pytest*
 grant is dropped and headless `-p` denies the command — the agent cannot run its
 test.
 
-ADR [0016](docs/architecture/decisions/0016-trust-the-agent-workspace-for-headless-runs.md)
-(Proposed) is the way through: `ClaudeCli` marks the workspace trusted before
-launch, writing `projects["<workspace>"].hasTrustDialogAccepted = true` to the
-user-level Claude config. Two complications it names:
-
-- **Concurrency** — scenarios run in parallel under xdist, so the write must be
-  atomic or locked.
-- **Accumulation** — one entry per tmp workspace per run, unbounded without
-  pruning.
+ADR [0016](docs/architecture/decisions/0016-hand-the-agent-its-permissions-as-a-launch-argument.md)
+(Proposed) is the way through: `ClaudeCli` passes the scene's settings file to
+`claude` as `--settings <workspace>/.claude/settings.json`. Settings handed over
+as an argument are not discovered content, so the trust gate does not apply.
+Validated by spike on 2.1.220 — both failing scenarios pass, and the harness
+writes nothing outside the workspace.
 
 ### The order of work
 
@@ -37,9 +34,10 @@ honest red rather than a test that passes for want of the behaviour it targets.
    exec it, so they pick the new version up without a restart.
 2. Run the baseline. The real-agent spec config is expected to fail on the trust
    gate.
-3. TDD the trust-marking in `play/`, with the regression test in the
-   integration-marked suite.
-4. Concurrency and pruning, each as its own red-green.
+3. TDD `--settings` in `play/`: `ClaudeCli` takes the settings path and passes it
+   on, with the regression test in the integration-marked suite.
+4. Wire the path through from the caller that knows a scene keeps its settings at
+   `.claude/settings.json`.
 5. Move the pin in `README.md` per ADR
    [0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md), in a
    commit that changes nothing else.
