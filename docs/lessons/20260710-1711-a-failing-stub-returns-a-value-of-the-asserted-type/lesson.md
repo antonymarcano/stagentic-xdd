@@ -3,6 +3,7 @@
 - **Date-time:** 2026-07-10T17:11Z
 - **Task:** [1-first-test-for-miles-to-km-converter](../../../spec/tasks/1-first-test-for-miles-to-km-converter)
 - **Scenario:** [`test_write_a_failing_test`](../../../spec/tests/test_red_green_commit.py) — the spec test whose scorecard revealed the misstep
+- **Guarded by:** *Production returns a value of the same type as the value the test asserts*
 - **Config(s) seen in:**
     - Model: claude-opus-4-8 (1M context)
     - Reasoning effort: CLI default (high for Opus 4.8)
