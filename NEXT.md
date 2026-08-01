@@ -12,10 +12,6 @@
   waves and baseline. If the elimination method recurs per section or per model, it
   wants waves and arms as arguments and a baseline seeded from a live tally — likely
   `play` framework work, and possibly an ADR for the elimination methodology itself.
-- **`run-until-fail.sh` exits 1 on a clean run.** Its last statement inherits the
-  tally's exit status, and `tally-recurrence-batch.sh` ends on a short-circuit that
-  is false when there are no failures. A clean run and a failed one are
-  indistinguishable by exit code.
 - **Chunk long runs under the session usage limit** — a calibrated wave count,
   optionally stopping on a limit signal (`system/api_retry` surfaced from
   `ClaudeCli`), since there is no scriptable query for remaining budget.

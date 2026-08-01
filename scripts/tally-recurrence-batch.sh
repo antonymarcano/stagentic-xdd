@@ -75,4 +75,4 @@ if [ "$anyfail" -gt 0 ]; then
 fi
 echo "Named characteristic: $characteristic"
 echo "  FAIL: ${#fails[@]}"
-[ "${#fails[@]}" -gt 0 ] && printf '  %s\n' "${fails[@]}"
+if [ "${#fails[@]}" -gt 0 ]; then printf '  %s\n' "${fails[@]}"; fi

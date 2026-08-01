@@ -48,3 +48,4 @@ done
 
 echo "=== DONE: ${tot}/${tot} full-pass across $batches batches into $artefacts ==="
 bash "$tally" "" "$abs"
+exit 0
