@@ -49,7 +49,7 @@ honest red rather than a test that passes for want of the behaviour it targets.
 Read from the changelog for 2.1.192–2.1.220. No flag the harness passes changes
 (`-p`, `--permission-mode`, `--session-id`, `--add-dir`, `--plugin-dir`).
 
-- **2.1.212 records the reasoning effort level in session transcripts.** §6 rests
+- **2.1.212 records the reasoning effort level in session transcripts.** §7 rests
   on neither effort nor context window being readable back from a run — re-check
   that against a real run before acting on it.
 - **2.1.219 makes Opus 5 the default Opus model.** `.claude/settings.json` already
@@ -99,7 +99,22 @@ earns its place only to remove or avoid duplication, and lands across two commit
 - Work out how to build the scene that recreates the misstep: the opening
   workspace state that tempts an agent into adding several cases at once.
 
-## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 4. Observed Misstep: Started TDD at the innermost unit
+
+The change was driven from `ClaudeCli` — the deepest collaborator — rather than
+from the failing scenario. Adding its new required parameter meant threading the
+argument up through every caller before anything could go green: eight call sites
+in its own test file, the contract test, a test double's signature, and
+`ClaudeSession`. None of that work was the change; it was the cost of having
+started underneath it.
+
+Worse, the question the change actually turned on — who owns the knowledge that a
+scene keeps its permissions at `.claude/settings.json` — surfaced mid-cascade,
+with the code already half-changed. Working outside-in asks it first: start at the
+scenario that fails, descend one collaborator at a time, and each red is about the
+seam being designed rather than about call sites that no longer bind.
+
+## 5. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
 scenario many times and tallying per-run outcomes. The shell scripts in
@@ -118,14 +133,14 @@ reproducible rather than one-off.
 The elimination methodology these encode — paired waves, a control arm, stopping
 on contamination — may warrant an ADR alongside the implementation.
 
-## 5. Contract-test ClaudeCli's options
+## 6. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
 (`play/tests/contract/test_claude_cli.py`). Add one contract test per option,
 verifying it does what we expect against the real CLI, one at a time.
 
-## 6. Pin and record reasoning effort and the context window
+## 7. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -157,7 +172,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 7. Simplify the dev commands with a build tool
+## 8. Simplify the dev commands with a build tool
 
 The "before any commit" gate — test → lint → mutation — and the levels of test and
 check (unit, contract, integration, the spec configs, focused/full mutation, the full
@@ -252,7 +267,7 @@ survivor means *subtract the speculative code* (or document an accepted-mutation
    `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
 3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
 
-## 8. Improvement plan working approach
+## 9. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -335,7 +350,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 9. Improvement plan
+## 10. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -443,7 +458,7 @@ A candidate convention to start from — every public entry point to the
 
 This may become the standard for all files.
 
-## 10. Heading case — a repo-wide convention question
+## 11. Heading case — a repo-wide convention question
 
 `SKILL.md` uses title-case headings; every other heading in the repo is sentence
 case. Neither [`document-style.md`](docs/document-style.md) nor
