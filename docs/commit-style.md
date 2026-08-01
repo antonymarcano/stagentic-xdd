@@ -4,6 +4,8 @@ This commit style document supersedes any inferred style from past commit messag
 
 A commit message answers *why*, not *what* — the diff already records every edited line. The message earns its place by stating the motivating problem, constraint, or goal the change serves.
 
+**State what is true after the commit, not how things were before.** *"commit guidance supersedes any inferred style from past commits"*, not *"past commits were being read as the style to follow"*.
+
 **Subjects:** declarative, answering *why* the change is being made — the rationale, need, or constraint it serves. What has changed is in the change set, so doesn't need to be repeated; imperative voice (`add X`, `remove Y`) and bare mechanism narration (`X directive added`, `Y section removed`) do not belong in subjects — they describe what changed in place of why. Vary the framing — a log built to one template reads monotonously. Subjects from this repo that work:
 
 - *"is_archivable must reject a run with no artefacts dir to write to"*
