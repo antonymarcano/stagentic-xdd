@@ -4,19 +4,7 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Measuring guidance at scale — what the tooling still needs
-
-- **A permanent, parameterised runner.** `scripts/run-until-fail.sh` covers
-  single-arm validation and `spec/.artefacts/isolate-workflow/driver*.sh` covers
-  alternating A/B, but the latter are one-off, gitignored artefacts with hard-coded
-  waves and baseline. If the elimination method recurs per section or per model, it
-  wants waves and arms as arguments and a baseline seeded from a live tally — likely
-  `play` framework work, and possibly an ADR for the elimination methodology itself.
-- **Chunk long runs under the session usage limit** — a calibrated wave count,
-  optionally stopping on a limit signal (`system/api_retry` surfaced from
-  `ClaudeCli`), since there is no scriptable query for remaining budget.
-
-## 2. Capture code-change diffs in the run transcript — Edit still to do
+## 1. Capture code-change diffs in the run transcript — Edit still to do
 
 The captured `transcript.md` (produced by `ClaudeTranscriber`) renders a tool use
 as only its `file_path`, so what the agent changed can be invisible to a reviewer
@@ -31,7 +19,7 @@ diff. The JSONL already carries the full tool input. TDD in `play`
 (`claude_transcriber.py`) — extend the current transcriber, rather than waiting on
 the ground-up rewrite in ADR 0014.
 
-## 3. Observed Misstep: Added multiple cases to a test all at once
+## 2. Observed Misstep: Added multiple cases to a test all at once
 
 Introducing a parametrised `case` is introducing a test, so adding more than one
 case at once writes several failing tests before any production change — the same
@@ -50,13 +38,14 @@ earns its place only to remove or avoid duplication, and lands across two commit
 - Work out how to build the scene that recreates the misstep: the opening
   workspace state that tempts an agent into adding several cases at once.
 
-## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 3. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
-scenario many times and tallying per-run outcomes. Until this lands, an interim
-10× command in [COMMANDS.md](COMMANDS.md) runs the real-agent scenarios at 10-way
-concurrency with no launch stagger; it launches but does not tally, so the signals (did the skill
-load; literal vs formula) are read per run by hand.
+scenario many times and tallying per-run outcomes. The shell scripts in
+[`scripts/`](scripts) get us by: `verify-runs.sh` for single-arm verification,
+`compare-wordings.sh` for an alternating A/B, `tally.sh` to read a run set. They
+launch at full concurrency with no stagger, and a wave count has to be chosen by
+hand against the session usage limit.
 
 Make it a first-class mechanism in **play** — framework work, not a spec helper or
 a shell loop (cf. "Review later: move scene management to play"). Run a named
@@ -65,7 +54,10 @@ Per run, capture the pytest result plus the scenario's signals (skill loaded; th
 production shape). This makes experiments (baseline vs B, gateway variants)
 reproducible rather than one-off.
 
-## 5. Contract-test ClaudeCli's options
+The elimination methodology these encode — paired waves, a control arm, stopping
+on contamination — may warrant an ADR alongside the implementation.
+
+## 4. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
@@ -76,7 +68,7 @@ verifying it does what we expect against the real CLI, one at a time.
 move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
 becomes necessary only on 2.1.193+.
 
-## 6. Pin and record reasoning effort and the context window
+## 5. Pin and record reasoning effort and the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
 (Proposed): a run transcript records the CLI version and model (ADR
@@ -113,7 +105,7 @@ Two pieces of work, each TDD in `play/`:
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 7. Simplify the dev commands with a build tool
+## 6. Simplify the dev commands with a build tool
 
 The "before any commit" gate — test → lint → mutation — and the levels of test and
 check (unit, contract, integration, the spec configs, focused/full mutation, the full
@@ -208,7 +200,7 @@ survivor means *subtract the speculative code* (or document an accepted-mutation
    `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
 3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
 
-## 8. Improvement plan working approach
+## 7. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -291,7 +283,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 9. Improvement plan
+## 8. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -399,7 +391,7 @@ A candidate convention to start from — every public entry point to the
 
 This may become the standard for all files.
 
-## 10. Heading case — a repo-wide convention question
+## 9. Heading case — a repo-wide convention question
 
 `SKILL.md` uses title-case headings (`# Your Purpose`, `# Model Corrections`,
 `## Always Write the Test First`, …); every other heading in the repo is sentence
@@ -423,6 +415,10 @@ Options:
 
 ## Future options
 
+- **Chunk long runs under the session usage limit**: a calibrated wave count,
+  optionally stopping on a limit signal (`system/api_retry` surfaced from
+  `ClaudeCli`), since there is no scriptable query for remaining budget. Today the
+  count is chosen by hand.
 - **Critic saves results to a file**: instruct the critic prompt to write
   its scorecard to a specific file (e.g. `scorecard.json`) rather than
   returning JSON in the response text. The file would contain only JSON,

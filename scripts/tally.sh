@@ -4,14 +4,16 @@
 # and (optionally) snapshot integrity. Self-contained so a whole tally is one
 # allowlisted call — no ad-hoc inline commands needed.
 #
-# Interim tooling.
-#
-# Usage: tally-recurrence-batch.sh [characteristic] [artefacts-dir] [snapshot-marker]
+# Usage: tally.sh [characteristic] [artefacts-dir] [snapshot-marker]
 #   characteristic   critic characteristic to count FAILs of
 #                    (default: the write-order characteristic)
 #   artefacts-dir    dir of archived runs (default: spec/.artefacts)
 #   snapshot-marker  optional literal string; counts runs whose transcript
 #                    contains it (snapshot-integrity check)
+#
+# Exit: 0 every run clean; 1 at least one run failed a characteristic;
+#       2 nothing to evaluate (no critiques found) — distinct from 0 so an
+#       empty or mis-pointed dir cannot read as success.
 #
 # Tallies every run currently in the artefacts dir (cumulative across batches).
 set -u
@@ -76,3 +78,7 @@ fi
 echo "Named characteristic: $characteristic"
 echo "  FAIL: ${#fails[@]}"
 if [ "${#fails[@]}" -gt 0 ]; then printf '  %s\n' "${fails[@]}"; fi
+
+if [ "$total" -eq 0 ]; then exit 2; fi
+if [ "$anyfail" -gt 0 ]; then exit 1; fi
+exit 0

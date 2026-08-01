@@ -499,7 +499,9 @@ and
 
 Run as 10 sequential batches of 10 parallel runs, each run covering both
 scenarios, via `scripts/run-until-fail.sh` — which halts on the first scorecard
-failure, and ran to completion. Skill-load confirmed two independent ways (the
+failure, and ran to completion. That script has since been superseded by
+`scripts/verify-runs.sh --stop-on-fail`; see
+[Verify one wording at scale](../../../COMMANDS.md#verify-one-wording-at-scale). Skill-load confirmed two independent ways (the
 critic's *invoked the xdd skill* row and a transcript grep): 200/200 both ways,
 no disagreements.
 
