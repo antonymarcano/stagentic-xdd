@@ -4,10 +4,11 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Upgrade the pinned CLI — blocked on trust-marking
+## 1. Upgrade the pinned CLI to 2.1.220
 
 The pin sits at 2.1.191. The current release is 2.1.220, and the gap widens with
-every week we leave it.
+every week we leave it. The container build config installs 2.1.150 — further
+back still.
 
 2.1.193 added a workspace-trust gate: an untrusted workspace's
 `.claude/settings.json` `permissions.allow` is ignored. Every scenario runs in a
@@ -25,10 +26,46 @@ user-level Claude config. Two complications it names:
 - **Accumulation** — one entry per tmp workspace per run, unbounded without
   pruning.
 
-TDD in `play/`, with the regression test in the integration-marked suite. Then
-move the pin per ADR
-[0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md) and re-run
-the baseline.
+### The order of work
+
+Upgrade before writing the test, so the gate is present and the failure is an
+honest red rather than a test that passes for want of the behaviour it targets.
+
+1. `npm install -g @anthropic-ai/claude-code@2.1.220`, then restart the session so
+   it runs the same version its subprocesses do. Unit tests inject a runner and
+   never reach the binary; integration tests resolve `claude` from `PATH` when they
+   exec it, so they pick the new version up without a restart.
+2. Run the baseline. The real-agent spec config is expected to fail on the trust
+   gate.
+3. TDD the trust-marking in `play/`, with the regression test in the
+   integration-marked suite.
+4. Concurrency and pruning, each as its own red-green.
+5. Move the pin in `README.md` per ADR
+   [0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md), in a
+   commit that changes nothing else.
+6. Persist the version in the container build config, last.
+7. ADR 0016 → Accepted.
+
+### What else the upgrade brings
+
+Read from the changelog for 2.1.192–2.1.220. No flag the harness passes changes
+(`-p`, `--permission-mode`, `--session-id`, `--add-dir`, `--plugin-dir`).
+
+- **2.1.212 records the reasoning effort level in session transcripts.** §6 rests
+  on neither effort nor context window being readable back from a run — re-check
+  that against a real run before acting on it.
+- **2.1.219 makes Opus 5 the default Opus model.** `.claude/settings.json` already
+  pins `ANTHROPIC_DEFAULT_OPUS_MODEL`, so the resolved model is unchanged.
+- **2.1.202 fixes a re-invoked skill appending duplicate instructions.** The spec
+  measures skill-load and `SKILL.md` wording, so measured rates may move.
+- **2.1.214 and 2.1.216 change Bash permission matching** for `dir/**` rules and
+  for compound statements with redirects. The scene's grant is neither shape; this
+  repo's own allow-list carries both.
+- **2.1.214 adds an `EndConversation` tool; 2.1.219 adds `mcp_server_errors` to
+  the headless init event.** New JSONL surface the transcriber may meet.
+
+The recorded pass rates and the captured lessons were measured on 2.1.191. A green
+baseline says the harness works; it does not establish that those rates still hold.
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
