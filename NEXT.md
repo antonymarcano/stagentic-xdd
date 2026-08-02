@@ -548,10 +548,20 @@ config in the checked-in `.claude/settings.json`.
 
 The hooks — built, and candidates:
 
-- **SessionStart — inject working-practices (built).** Prints the literal
-  text of `docs/working-practices.md` into context via
+- **SessionStart — inject the docs to be applied literally (built).**
+  `session_start_inject_docs.sh` prints the literal text of
+  `docs/working-practices.md` and `docs/commit-style.md` into context via
   `hookSpecificOutput.additionalContext` — the actual words, not a pointer,
-  because the failure mode was paraphrase, not ignorance. Cannot block.
+  because the failure mode was paraphrase, not ignorance. Cannot block. Each
+  doc in the list carries its own preamble saying how to apply it.
+
+  Commit style joined the list after a second read-but-not-applied miss: a
+  proposal written to an inferred style with the doc unopened. Session start is
+  the only trigger that reaches every commit message, because a proposal is
+  text rather than a tool call — a prompt hook covers only the messages a
+  person asks for, a green hook only those a test precedes, and by `git commit`
+  the message is already written. Under propose-on-green, most proposals answer
+  no prompt at all.
 - **PostToolUse after pytest — green nudge (built, proven this session).**
   On a pytest green, injects a reminder to run the focused mutation check
   (see [Mutation testing](COMMANDS.md#mutation-testing)) on the in-flight
