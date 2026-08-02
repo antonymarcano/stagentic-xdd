@@ -60,7 +60,7 @@ trap 'cp "$original" "$target"; rm -f "$original"; echo "[compare] restored $tar
 run_arm() {  # $1 label  $2 snapshot  $3 wave
   cp "$2" "$target"
   echo "=== [$1] wave $3/$waves ($runs runs; $target swapped) ==="
-  bash scripts/run-batch.sh "$node" "$runs" "$artefacts/$1/wave-$3"
+  bash scripts/run-batch.sh "$node" "$runs" "$artefacts/$1"
 }
 
 cumulative() {  # $1 abs-dir -> sets tally_full_pass ("<full-pass>/<total>") and tally_status
