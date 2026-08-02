@@ -63,17 +63,17 @@ run_arm() {  # $1 label  $2 snapshot  $3 wave
   bash scripts/run-batch.sh "$node" "$runs" "$artefacts/$1/wave-$3"
 }
 
-cumulative() {  # $1 abs-dir -> echoes "<full-pass>/<total>", sets tally_status
+cumulative() {  # $1 abs-dir -> sets tally_full_pass ("<full-pass>/<total>") and tally_status
   local out; out="$(bash "$tally" "" "$1" 2>/dev/null)"; tally_status=$?
-  sed -n 's/^Full-pass.*: \([0-9]*\/[0-9]*\)/\1/p' <<<"$out"
+  tally_full_pass="$(sed -n 's/^Full-pass.*: \([0-9]*\/[0-9]*\)/\1/p' <<<"$out")"
 }
 
 for w in $(seq -w 1 "$waves"); do
   run_arm "$labelA" "$fileA" "$w"
   run_arm "$labelB" "$fileB" "$w"
 
-  a="$(cumulative "$absA")"; a_status=$tally_status
-  b="$(cumulative "$absB")"; b_status=$tally_status
+  cumulative "$absA"; a="$tally_full_pass"; a_status=$tally_status
+  cumulative "$absB"; b="$tally_full_pass"; b_status=$tally_status
   echo "--- after wave $w — $labelA: ${a:-?} full-pass, $labelB: ${b:-?} full-pass"
 
   if [ "$stop_on_a_fail" = "1" ] && [ "$a_status" -ne 0 ]; then
