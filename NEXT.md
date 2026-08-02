@@ -4,47 +4,60 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Upgrade the pinned CLI to 2.1.220
+## 1. Ablation test: does the skill's motivation still make a difference?
 
-The pin in [README.md](README.md) sits at 2.1.191. The container build config
-installs 2.1.150 — further back still. The harness handles 2.1.193's
-workspace-trust gate, so 2.1.220 is a live candidate.
+Motivation reaches the agent through three elements of
+[`SKILL.md`](xdd-plugin/skills/xdd/SKILL.md):
 
-Nothing here moves on a single green baseline. Every real-agent scenario is
-judged by a critic, so one run per scenario establishes nothing — see
-[COMMANDS.md](COMMANDS.md#repeated-real-agent-runs-interim). The recorded pass
-rates, and every lesson's *Config(s) validated under*, were measured on 2.1.191.
-Until they are re-measured, there is no evidence for the candidate.
+1. **Identity**, under `# Your Purpose` — *"You are a test-driven development
+   (TDD) expert."*
+2. **Goal**, under the same heading — *"Your goal is to help developers write
+   high-quality, maintainable code by demonstrating an exemplar approach to
+   TDD."*
+3. **Consequence**, under `## Always Write the Test First` — *"Failing to adhere
+   to this discipline sets a poor example for the developer that set your goal
+   and lets everyone down."*
 
-### The order of work
+All three come out together: the consequence refers back to the goal, so it does
+not stand on its own.
 
-1. Re-measure on 2.1.220, at the scale the lessons were validated at —
-   `bash scripts/verify-runs.sh <artefacts-dir>` defaults to 100 runs of the
-   whole red-green-commit file, which is what lesson 5 was retested at. Tally the
-   result per characteristic.
-2. Only once the rates hold:
-   - move the pin in `README.md` per ADR
-     [0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md), in a
-     commit that changes nothing else;
-   - update every lesson's *Config(s) validated under* to the CLI the rates were
-     re-measured on;
-   - ADR
-     [0016](docs/architecture/decisions/0016-hand-the-agent-its-permissions-as-a-launch-argument.md)
-     → Accepted.
+The motivation earned its place in [the recurrence
+lesson](docs/lessons/20260712-1855-write-the-failing-test-before-the-production-code-RECURRED/lesson.md),
+where adding it took the wording from a pooled 190/200 full-pass to 99/100.
+That was measured on claude-opus-4-8 under CLI 2.1.191; both have since moved.
+The committed wording holds at 100/100 on the current pair, but the skill has
+never been run without the motivation on it — so there is no evidence it is still
+paying for itself.
 
-   If a rate has moved, the guidance change that restores it lands before the pin
-   does — ADR 0002 §3 has the branch-and-fix path.
-3. Persist the version in the container build config.
+Run it as an alternating A/B, 10 runs per arm:
 
-### What the upgrade leaves open
+1. **arm A, the control** — the committed `xdd-plugin/skills/xdd/SKILL.md`.
+2. **arm B, the candidate** — the same file with all three elements removed.
 
-- **2.1.212 records the reasoning effort level in session transcripts.** §7 rests
-  on neither effort nor context window being readable back from a run — re-check
-  that against a real run before acting on it.
-- **2.1.202 fixes a re-invoked skill appending duplicate instructions.** The spec
-  measures skill-load and `SKILL.md` wording, so measured rates may move.
-- **2.1.214 adds an `EndConversation` tool; 2.1.219 adds `mcp_server_errors` to
-  the headless init event.** New JSONL surface the transcriber may meet.
+`compare-wordings.sh` copies a snapshot over the target before each arm's wave and
+restores the original on any exit, so both arms need a snapshot file; keep them
+beside the others in the lesson's `SKILL-snapshots/` folder. One wave of ten
+gives ten runs per arm:
+
+```
+STOP_ON_A_FAIL=1 bash scripts/compare-wordings.sh .artefacts/<name> \
+  <snapshot-A> current <snapshot-B> no-motivation 1 10
+```
+
+Arm A is known-clean, so `STOP_ON_A_FAIL=1` treats any failure in it as a
+contaminated window. See [COMMANDS.md](COMMANDS.md#compare-two-wordings).
+
+Two things to hold in mind reading the result:
+
+- **Ten runs per arm is a screen, not a confirmation.** The acceptance bar is
+  under 1 failure in 100, and a wording that has regressed to the old baseline
+  rate still comes through a clean ten about 10% of the time. A clean arm B earns
+  a 100-run confirmation; on its own it settles nothing.
+- **What each outcome opens.** A regressed arm B means the motivation is still
+  earning its place, and separating the three elements — identity, goal,
+  consequence — becomes the experiment worth running next. An arm B that matches the control
+  means the motivation may no longer be earning its place on this model and CLI;
+  confirm at 100 runs before removing anything.
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
@@ -121,39 +134,54 @@ on contamination — may warrant an ADR alongside the implementation.
 (`play/tests/contract/test_claude_cli.py`). Add one contract test per option,
 verifying it does what we expect against the real CLI, one at a time.
 
-## 7. Pin and record reasoning effort and the context window
+## 7. Capture the effort used in the agent transcript
+
+The versions header records the CLI and the model a run used (ADR
+[0017](docs/architecture/decisions/0017-record-cli-version-and-model-in-the-run-transcript.md)),
+but not its **reasoning effort**, which bears on a lesson's provenance (ADR
+[0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md))
+the same way.
+
+Since CLI 2.1.212 the effort a run used is observable: every `assistant` event in
+the session JSONL carries a top-level `"effort"` field, reading `"high"` on the
+pinned model. Read it from there and render it in the versions header beside CLI
+and MODEL. TDD in `play` (`claude_transcriber.py`) — extend the current
+transcriber rather than waiting on the ground-up rewrite in ADR
+[0014](docs/architecture/decisions/0014-separate-claude-jsonl-translation-from-the-transcriber.md).
+
+This records what a run *actually used*, which is a separate matter from choosing
+it deliberately — that is §8.
+
+## 8. Pin reasoning effort, and record the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
-(Proposed): a run transcript records the CLI version and model (ADR
-[0017](docs/architecture/decisions/0017-record-cli-version-and-model-in-the-run-transcript.md)),
-but not the **reasoning effort** or the **context window** a run used — both bear
-on a lesson's provenance (ADR
-[0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md)).
-What was learned while capturing the first lesson:
+(Proposed) was written when neither value could be read back from a run. That no
+longer holds for effort, so the ADR needs revising before it is acted on. What a
+run on 2.1.220 shows:
 
-- **Neither value can be read back from a run.** The session JSONL and the
-  `system/init` event both report a bare model id, with no context-window
-  variant and no effort. Both can only be recorded as what the harness asked for.
-- The harness passes no `--effort`, so runs take the CLI default.
+- **Effort is readable back** — §7 covers capturing it. What is left here is
+  *setting* it, rather than taking whatever the CLI defaults to.
+- **The context window is not.** Both the session JSONL and the `system/init`
+  event report a bare `claude-opus-5`, with no `[1m]` variant.
+- The harness passes no `--effort`, so runs take the CLI default — measured as
+  `high` on the pinned model.
 
 Two pieces of work, each TDD in `play/`:
 
 1. **Pin effort.** Add a `--effort` flag to the harness's `claude -p` invocation
-   (`play/src/claude_cli.py`), set to the pinned model's own default so the flag
-   records behaviour rather than changes it. Establish that default first.
+   (`play/src/claude_cli.py`), set to `high` so the flag records behaviour rather
+   than changes it.
 
    Levels are **model-dependent**, so the flag must be **gated on the resolved
    model** — passing `--effort` to a model that does not support it fails the run.
    `ClaudeCli` therefore needs to know which model it is invoking.
-2. **Record effort + context.** Extend the versions header (ADR 0017) so the
-   transcript records the effort the harness set and the resolved context window
-   (the `[1m]` form from the `system/init` event, not the per-message
-   `message.model`).
+2. **Record the context window.** Extend the versions header (ADR 0017) with the
+   window the harness asked for, since no run reports it back.
 
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 8. Simplify the dev commands with a build tool
+## 9. Simplify the dev commands with a build tool
 
 The "before any commit" gate — test → lint → mutation — and the levels of test and
 check (unit, contract, integration, the spec configs, focused/full mutation, the full
@@ -248,7 +276,7 @@ survivor means *subtract the speculative code* (or document an accepted-mutation
    `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
 3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
 
-## 9. Improvement plan working approach
+## 10. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -331,7 +359,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 10. Improvement plan
+## 11. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -439,7 +467,7 @@ A candidate convention to start from — every public entry point to the
 
 This may become the standard for all files.
 
-## 11. Heading case — a repo-wide convention question
+## 12. Heading case — a repo-wide convention question
 
 `SKILL.md` uses title-case headings; every other heading in the repo is sentence
 case. Neither [`document-style.md`](docs/document-style.md) nor
