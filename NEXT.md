@@ -29,15 +29,24 @@ The committed wording holds at 100/100 on the current pair, but the skill has
 never been run without the motivation on it — so there is no evidence it is still
 paying for itself.
 
-Run it as an alternating A/B, 10 runs per arm:
+Run it as an alternating A/B, escalating in waves of ten runs per arm:
 
 1. **arm A, the control** — the committed `xdd-plugin/skills/xdd/SKILL.md`.
 2. **arm B, the candidate** — the same file with all three elements removed.
 
+Ten runs per arm is a screen, not a confirmation. The acceptance bar is under 1
+failure in 100, and a wording that has regressed to the old baseline rate still
+comes through a clean ten about 10% of the time. So a clean wave earns the next
+one, up to **100 runs per arm** — 200 critiques, since each run covers both
+scenarios in `test_red_green_commit.py`. A failure in either arm stops the run
+there: in arm A it marks a contaminated window, in arm B it already answers the
+question.
+
 `compare-wordings.sh` copies a snapshot over the target before each arm's wave and
 restores the original on any exit, so each arm needs a snapshot file. Both are in
 [`spec/experiments/20260802-motivation-ablation/`](spec/experiments/20260802-motivation-ablation),
-where the result is recorded too. One wave of ten gives ten runs per arm:
+where the result is recorded too. Runs accumulate in the artefacts dir, so every
+wave points at the same one:
 
 ```
 STOP_ON_A_FAIL=1 bash scripts/compare-wordings.sh .artefacts/<datetime>-motivation-ablation \
@@ -46,20 +55,14 @@ STOP_ON_A_FAIL=1 bash scripts/compare-wordings.sh .artefacts/<datetime>-motivati
   1 10
 ```
 
-Arm A is known-clean, so `STOP_ON_A_FAIL=1` treats any failure in it as a
-contaminated window. See [COMMANDS.md](COMMANDS.md#compare-two-wordings).
+`STOP_ON_A_FAIL=1` gates arm A; tally between waves to catch an arm B failure.
+See [COMMANDS.md](COMMANDS.md#compare-two-wordings).
 
-Two things to hold in mind reading the result:
-
-- **Ten runs per arm is a screen, not a confirmation.** The acceptance bar is
-  under 1 failure in 100, and a wording that has regressed to the old baseline
-  rate still comes through a clean ten about 10% of the time. A clean arm B earns
-  a 100-run confirmation; on its own it settles nothing.
-- **What each outcome opens.** A regressed arm B means the motivation is still
-  earning its place, and separating the three elements — identity, goal,
-  consequence — becomes the experiment worth running next. An arm B that matches the control
-  means the motivation may no longer be earning its place on this model and CLI;
-  confirm at 100 runs before removing anything.
+**What each outcome opens.** A regressed arm B means the motivation is still
+earning its place, and separating the three elements — identity, goal,
+consequence — becomes the experiment worth running next. An arm B that stays
+clean to 100 means the motivation may no longer be earning its place on this
+model and CLI.
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
