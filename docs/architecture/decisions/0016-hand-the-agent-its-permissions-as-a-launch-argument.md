@@ -8,7 +8,7 @@ agent-directive: |
 
 # 0016 — Hand the agent its permissions as a launch argument
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context
 
