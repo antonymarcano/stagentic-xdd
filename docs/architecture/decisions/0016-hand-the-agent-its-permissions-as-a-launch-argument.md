@@ -28,7 +28,7 @@ The harness passes the scene's settings file to `claude` as a launch argument: `
 
 Settings supplied as an argument are not discovered content — the invoker hands them over — so the trust gate does not apply. Measured on 2.1.220: passed this way, `Bash(uv run pytest*)` applies and the agent runs its test on the first attempt.
 
-The settings path is passed *into* `ClaudeCli`, alongside the workspace, session id and additional directories it already takes. Knowing that a scene keeps its settings at `.claude/settings.json` belongs with the caller that knows about scenes, not with the CLI wrapper.
+`ClaudeCli` works the path out from the workspace it is already handed, and passes `--settings` only when a file is there. No caller has to know that a scene keeps its settings at `.claude/settings.json`, and a caller running against a bare workspace — the contract and integration tests among them — is unaffected.
 
 Supplying the permissions is environment setup the harness owns, alongside the cwd it sets (ADR [0008](0008-run-the-agent-with-cwd-at-the-workspace-root.md)) and the `--add-dir` directories it passes — not a property of the scene. The scene keeps expressing *what* the agent may do; the harness makes that grant effective by handing it over.
 
@@ -37,11 +37,12 @@ Supplying the permissions is environment setup the harness owns, alongside the c
 - The scene's narrow allow-list stays the single source of truth for what the agent may run. Passing the file by path neither moves the list into harness code nor widens it.
 - The harness writes nothing outside the workspace under test. No shared state is mutated, so parallel scenarios do not contend and nothing accumulates between runs.
 - The decision rests on `--settings`, a published command-line interface, rather than on the shape of the CLI's internal configuration state.
-- The behaviour is exercised against a real `claude`, so its regression test belongs with the integration-marked suite, and the change lands TDD as its own behavioural commit after this ADR.
+- The flag is pinned by a unit test over the composed command, and exercised end-to-end by the real-agent scenarios, which run a real `claude` in a workspace that has never been trusted.
 
 ## Alternatives considered
 
 - **Mark the workspace trusted in the user-level configuration** (`projects["<workspace>"].hasTrustDialogAccepted = true` in `~/.claude.json`): satisfies the gate, and the grant then applies. Rejected: it modifies the wider environment in order to run an isolated test. It writes to shared state on every run, which parallel scenarios must lock against and which accumulates an entry per temporary workspace without pruning, and it depends on an internal configuration key rather than a published interface.
+- **Pass the settings path into `ClaudeCli` from its caller**: the caller is what knows a scene keeps its settings at `.claude/settings.json`, so that knowledge would sit with the code owning the scene rather than in the CLI wrapper. Rejected for now: `ClaudeCli` is already handed the workspace, so it can work the path out without a new parameter, and adding one threads an argument through every caller and test double before anything works. Nothing yet needs a settings file anywhere else; when something does, the parameter is a small local change at that point.
 - **Hand-list the permitted tools on the CLI (`--allowedTools "Bash(uv run pytest*)"`)**: also escapes the gate, but takes *what the agent may do* out of the scene — where it is reviewed alongside the rest of the task fixture — and into harness wiring, where every scenario shares one list. Rejected.
 - **`--add-dir`**: widens the directories tools may access. It does not grant permission to run a command, so it cannot carry the allow-list.
 - **`--dangerously-skip-permissions` / `--permission-mode bypassPermissions`**: one flag and no file to pass, but it bypasses *all* permission checks. The scene's allow-list is then inert and the agent could run anything — discarding the deliberate constraint the scenario is built around. Rejected: it removes the very thing the scene is asserting.

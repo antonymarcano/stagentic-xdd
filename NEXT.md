@@ -6,64 +6,45 @@
 
 ## 1. Upgrade the pinned CLI to 2.1.220
 
-The pin sits at 2.1.191. The current release is 2.1.220, and the gap widens with
-every week we leave it. The container build config installs 2.1.150 — further
-back still.
+The pin in [README.md](README.md) sits at 2.1.191. The container build config
+installs 2.1.150 — further back still. The harness handles 2.1.193's
+workspace-trust gate, so 2.1.220 is a live candidate.
 
-2.1.193 added a workspace-trust gate: an untrusted workspace's
-`.claude/settings.json` `permissions.allow` is ignored. Every scenario runs in a
-fresh tmp workspace, which is never trusted, so the scene's `Bash(uv run pytest*)`
-grant is dropped and headless `-p` denies the command — the agent cannot run its
-test.
-
-ADR [0016](docs/architecture/decisions/0016-hand-the-agent-its-permissions-as-a-launch-argument.md)
-(Proposed) is the way through: `ClaudeCli` passes the scene's settings file to
-`claude` as `--settings <workspace>/.claude/settings.json`. Settings handed over
-as an argument are not discovered content, so the trust gate does not apply.
-Validated by spike on 2.1.220 — both failing scenarios pass, and the harness
-writes nothing outside the workspace.
+Nothing here moves on a single green baseline. Every real-agent scenario is
+judged by a critic, so one run per scenario establishes nothing — see
+[COMMANDS.md](COMMANDS.md#repeated-real-agent-runs-interim). The recorded pass
+rates, and every lesson's *Config(s) validated under*, were measured on 2.1.191.
+Until they are re-measured, there is no evidence for the candidate.
 
 ### The order of work
 
-Upgrade before writing the test, so the gate is present and the failure is an
-honest red rather than a test that passes for want of the behaviour it targets.
+1. Re-measure on 2.1.220, at the scale the lessons were validated at —
+   `bash scripts/verify-runs.sh <artefacts-dir>` defaults to 100 runs of the
+   whole red-green-commit file, which is what lesson 5 was retested at. Tally the
+   result per characteristic.
+2. Only once the rates hold:
+   - move the pin in `README.md` per ADR
+     [0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md), in a
+     commit that changes nothing else;
+   - update every lesson's *Config(s) validated under* to the CLI the rates were
+     re-measured on;
+   - ADR
+     [0016](docs/architecture/decisions/0016-hand-the-agent-its-permissions-as-a-launch-argument.md)
+     → Accepted.
 
-1. `npm install -g @anthropic-ai/claude-code@2.1.220`, then restart the session so
-   it runs the same version its subprocesses do. Unit tests inject a runner and
-   never reach the binary; integration tests resolve `claude` from `PATH` when they
-   exec it, so they pick the new version up without a restart.
-2. Run the baseline. The real-agent spec config is expected to fail on the trust
-   gate.
-3. TDD `--settings` in `play/`: `ClaudeCli` takes the settings path and passes it
-   on, with the regression test in the integration-marked suite.
-4. Wire the path through from the caller that knows a scene keeps its settings at
-   `.claude/settings.json`.
-5. Move the pin in `README.md` per ADR
-   [0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md), in a
-   commit that changes nothing else.
-6. Persist the version in the container build config, last.
-7. ADR 0016 → Accepted.
+   If a rate has moved, the guidance change that restores it lands before the pin
+   does — ADR 0002 §3 has the branch-and-fix path.
+3. Persist the version in the container build config.
 
-### What else the upgrade brings
-
-Read from the changelog for 2.1.192–2.1.220. No flag the harness passes changes
-(`-p`, `--permission-mode`, `--session-id`, `--add-dir`, `--plugin-dir`).
+### What the upgrade leaves open
 
 - **2.1.212 records the reasoning effort level in session transcripts.** §7 rests
   on neither effort nor context window being readable back from a run — re-check
   that against a real run before acting on it.
-- **2.1.219 makes Opus 5 the default Opus model.** `.claude/settings.json` already
-  pins `ANTHROPIC_DEFAULT_OPUS_MODEL`, so the resolved model is unchanged.
 - **2.1.202 fixes a re-invoked skill appending duplicate instructions.** The spec
   measures skill-load and `SKILL.md` wording, so measured rates may move.
-- **2.1.214 and 2.1.216 change Bash permission matching** for `dir/**` rules and
-  for compound statements with redirects. The scene's grant is neither shape; this
-  repo's own allow-list carries both.
 - **2.1.214 adds an `EndConversation` tool; 2.1.219 adds `mcp_server_errors` to
   the headless init event.** New JSONL surface the transcriber may meet.
-
-The recorded pass rates and the captured lessons were measured on 2.1.191. A green
-baseline says the harness works; it does not establish that those rates still hold.
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
