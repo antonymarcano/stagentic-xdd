@@ -127,6 +127,26 @@ class TestClaudeCli:
                 cwd=ANY, capture_output=ANY, text=ANY,
             )
 
+        def test_should_hand_over_the_workspace_settings_file(self, tmp_path, subprocess_that_succeeds):
+            settings = tmp_path / ".claude" / "settings.json"
+            settings.parent.mkdir()
+            settings.write_text("{}")
+
+            ClaudeCli(runner=subprocess_that_succeeds)(
+                "any prompt",
+                workspace=tmp_path,
+                session_id="any session id",
+            )
+
+            subprocess_that_succeeds.assert_called_once_with(
+                ["claude", "-p", "any prompt",
+                 "--permission-mode", "acceptEdits",
+                 "--session-id", "any session id",
+                 "--add-dir", str(tmp_path),
+                 "--settings", str(settings)],
+                cwd=ANY, capture_output=ANY, text=ANY,
+            )
+
     class TestErrors:
         # noinspection PyArgumentList
         # - because we're protecting against changes that make it optional.

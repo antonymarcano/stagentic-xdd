@@ -69,6 +69,9 @@ def _command(
         cmd += ["--add-dir", str(directory)]
     if plugin_dir is not None:
         cmd += ["--plugin-dir", str(plugin_dir)]
+    settings = workspace / ".claude" / "settings.json"
+    if settings.exists():
+        cmd += ["--settings", str(settings)]
     return cmd
 
 
