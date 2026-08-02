@@ -9,11 +9,13 @@
 #   (default)        run all B batches whatever happens — a measurement, for
 #                    establishing a failure rate.
 #
-# Usage: verify-runs.sh [--stop-on-fail] <artefacts-dir> [batches] [runs] [pytest-node]
+# Usage: verify-runs.sh [--stop-on-fail] [--from N] <artefacts-dir> [batches] [runs] [pytest-node]
 #   artefacts-dir  parent folder relative to spec/, e.g. .artefacts/my-check.
 #                  Point at a FRESH dir; runs accumulate, so a dirty dir taints
 #                  the tally.
 #   batches        sequential batches (default: 10)
+#   --from N       number the batches from N (default: 1), so a top-up continues
+#                  an existing dir's set instead of reusing its batch folders.
 #   runs           parallel runs per batch (default: 10)
 #   pytest-node    scenario (default: the whole red-green-commit file, i.e. both
 #                  scenarios)
@@ -26,7 +28,14 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root" || exit 1
 
 stop_on_fail=0
-if [ "${1:-}" = "--stop-on-fail" ]; then stop_on_fail=1; shift; fi
+from=1
+while :; do
+  case "${1:-}" in
+    --stop-on-fail) stop_on_fail=1; shift ;;
+    --from) from="${2:?--from requires a batch number}"; shift 2 ;;
+    *) break ;;
+  esac
+done
 
 artefacts="${1:?artefacts-dir required, e.g. .artefacts/my-check}"
 batches="${2:-10}"
@@ -36,8 +45,9 @@ node="${4:-tests/test_red_green_commit.py}"
 tally="$repo_root/scripts/tally.sh"
 abs="$repo_root/spec/$artefacts"
 
-for b in $(seq -w 1 "$batches"); do
-  echo "=== batch $b/$batches ($runs runs) ==="
+last=$((from + batches - 1))
+for b in $(seq -f "%02g" "$from" "$last"); do
+  echo "=== batch $b of $from-$last ($runs runs) ==="
   bash scripts/run-batch.sh "$node" "$runs" "$artefacts/batch-$b"
 
   out="$(bash "$tally" "" "$abs" 2>/dev/null)"; status=$?
