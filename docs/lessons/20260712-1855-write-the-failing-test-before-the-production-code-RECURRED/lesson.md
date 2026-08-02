@@ -14,6 +14,8 @@
   - CLI: claude 2.1.191
   - Re-validated 2026-08-01 on claude-opus-5, CLI default effort, claude 2.1.191
     — see [*Model migration: Opus 5*](#model-migration-opus-5)
+  - Re-validated 2026-08-02 on claude-opus-5, CLI default effort (high), claude
+    2.1.220 — 100 runs, no failure of the guarding characteristic
 
 This is a recurrence of
 [the agent writing production code before the failing test](../20260628-1800-write-the-failing-test-before-the-production-code/lesson.md).

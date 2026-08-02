@@ -15,6 +15,8 @@
   - Re-validated 2026-08-01 on claude-opus-5 (Opus 5 exposes no context-variant
     suffix), CLI default effort, claude 2.1.191 — 100 runs, no failure of the
     guarding characteristic
+  - Re-validated 2026-08-02 on claude-opus-5, CLI default effort (high), claude
+    2.1.220 — 100 runs, no failure of the guarding characteristic
 
 ## Task
 
