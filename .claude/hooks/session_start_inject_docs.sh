@@ -19,6 +19,13 @@ docs = [
         "docs/working-practices.md. Apply it literally — do not rely on a "
         "paraphrase or a remembered summary.",
     ),
+    (
+        "docs/commit-style.md",
+        "Below is the project's commit style, injected verbatim from "
+        "docs/commit-style.md. Apply it literally to every commit message you "
+        "propose or write — do not rely on a paraphrase, a remembered summary, "
+        "or the style of past commits.",
+    ),
 ]
 context = "\n\n".join(
     preamble + "\n\n" + (project_dir / rel).read_text() for rel, preamble in docs
