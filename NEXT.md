@@ -35,13 +35,15 @@ Run it as an alternating A/B, 10 runs per arm:
 2. **arm B, the candidate** — the same file with all three elements removed.
 
 `compare-wordings.sh` copies a snapshot over the target before each arm's wave and
-restores the original on any exit, so both arms need a snapshot file; keep them
-beside the others in the lesson's `SKILL-snapshots/` folder. One wave of ten
-gives ten runs per arm:
+restores the original on any exit, so each arm needs a snapshot file. Both are in
+[`spec/experiments/20260802-motivation-ablation/`](spec/experiments/20260802-motivation-ablation),
+where the result is recorded too. One wave of ten gives ten runs per arm:
 
 ```
-STOP_ON_A_FAIL=1 bash scripts/compare-wordings.sh .artefacts/<name> \
-  <snapshot-A> current <snapshot-B> no-motivation 1 10
+STOP_ON_A_FAIL=1 bash scripts/compare-wordings.sh .artefacts/<datetime>-motivation-ablation \
+  spec/experiments/20260802-motivation-ablation/SKILL-current.md current \
+  spec/experiments/20260802-motivation-ablation/SKILL-no-motivation.md no-motivation \
+  1 10
 ```
 
 Arm A is known-clean, so `STOP_ON_A_FAIL=1` treats any failure in it as a
