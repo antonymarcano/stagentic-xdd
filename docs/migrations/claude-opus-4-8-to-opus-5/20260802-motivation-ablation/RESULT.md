@@ -60,7 +60,7 @@ Fisher 2-sided `p = 1.0000` — the two arms are the same.
 ## The claude-opus-4-8 result it is compared against
 
 From [the recurrence
-lesson](../../../docs/lessons/20260712-1855-write-the-failing-test-before-the-production-code-RECURRED/lesson.md),
+lesson](../../../lessons/20260712-1855-write-the-failing-test-before-the-production-code-RECURRED/lesson.md),
 measured on claude-opus-4-8 under CLI 2.1.191. That scenario ran
 `test_write_a_failing_test` on its own, so one run gave one critique.
 
@@ -105,7 +105,7 @@ matters.
   `xdd-plugin/skills/xdd/SKILL.md` adopts the file these runs measured. Any
   further edit to it needs its own measurement.
 - **The answer only holds for claude-opus-5 on CLI 2.1.220.** Per ADR
-  [0003](../../../docs/architecture/decisions/0003-pin-model-versions.md),
+  [0003](../../../architecture/decisions/0003-pin-model-versions.md),
   guidance is measured against the pinned pair. Change the pin and the question
   is open again.
 - **Do not split the three elements on this model.** Both arms pass everything,
