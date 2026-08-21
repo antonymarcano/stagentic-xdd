@@ -3,6 +3,7 @@
 - **Date-time:** 2026-06-28T18:00Z
 - **Task:** [1-first-test-for-miles-to-km-converter](../../../spec/tasks/1-first-test-for-miles-to-km-converter)
 - **Scenario:** [`test_write_a_failing_test`](../../../spec/tests/test_red_green_commit.py) — the spec test whose scorecard revealed the misstep
+- **Guarded by:** *Transcript shows the failing test was written before the production code*
 - **Config(s) seen in:**
   - Model: claude-opus-4-8[1m] (1M context window)
   - Reasoning effort: CLI default (high for Opus 4.8), not explicitly set
@@ -11,6 +12,11 @@
   - Model: claude-opus-4-8[1m] (1M context window)
   - Reasoning effort: CLI default (high for Opus 4.8), not explicitly set
   - CLI: claude 2.1.191
+  - Re-validated 2026-08-01 on claude-opus-5 (Opus 5 exposes no context-variant
+    suffix), CLI default effort, claude 2.1.191 — 100 runs, no failure of the
+    guarding characteristic
+  - Re-validated 2026-08-02 on claude-opus-5, CLI default effort (high), claude
+    2.1.220 — 100 runs, no failure of the guarding characteristic
 
 ## Task
 

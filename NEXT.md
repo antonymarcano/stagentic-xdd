@@ -4,38 +4,65 @@
 > NEXT.md tracks the immediate next step and is rewritten as work lands (without 
 > any mention of what was just completed.
 
-## 1. Validate the distilled xdd skill on Opus 5
+## 1. Ablation test: does the skill's motivation still make a difference?
 
-The committed `SKILL.md` is the distilled minimum for Opus 4.8 — motivation +
-`# Model corrections`, no `# Workflow` section. Validate that minimum on **Opus 5**:
-does it still hold the full scorecard on **both** scenarios of
-[`test_red_green_commit.py`](spec/tests/test_red_green_commit.py), 100 runs per
-scenario per arm?
+Motivation reaches the agent through three elements of
+[`SKILL.md`](xdd-plugin/skills/xdd/SKILL.md):
 
-**Method.** The same paired-wave A/B, run on Opus 5 as a migration spike — set
-`ANTHROPIC_DEFAULT_OPUS_MODEL` to the Opus 5 id in-shell (committed pin untouched).
-The alternating driver at `spec/.artefacts/isolate-workflow/driver*.sh` swaps the
-on-disk `SKILL.md` between arms and tallies per wave.
+1. **Identity**, under `# Your Purpose` — *"You are a test-driven development
+   (TDD) expert."*
+2. **Goal**, under the same heading — *"Your goal is to help developers write
+   high-quality, maintainable code by demonstrating an exemplar approach to
+   TDD."*
+3. **Consequence**, under `## Always Write the Test First` — *"Failing to adhere
+   to this discipline sets a poor example for the developer that set your goal
+   and lets everyone down."*
 
-- **Holds 100/100** → the minimum survives the model bump; record it in the lesson.
-- **Fails** → self-healing: add back the least guidance that heals the observed
-  failure mode (read-first, then a principles framing), re-measuring each addition —
-  the ladder, now on Opus 5.
+All three come out together: the consequence refers back to the goal, so it does
+not stand on its own.
 
-**Open threads from the 4.8 work:**
-- The `driver*.sh` scripts proved the method but are one-off, gitignored artefacts
-  with hard-coded waves/baseline. If the elimination method recurs per section or
-  model, it wants a **permanent, parameterised runner** (waves and arms as args,
-  baseline seeded from a live tally) — likely `play` framework work, and possibly an
-  ADR for the elimination methodology itself.
-- Chunk long runs under the session usage limit — a calibrated wave count, optionally
-  stopping on a limit signal (`system/api_retry` surfaced from `ClaudeCli`), since
-  there is no scriptable query for remaining budget.
-- **SKILL heading case (deferred).** The working-tree `SKILL.md` uses title-case
-  headings (`# Your Purpose`, `# Model Corrections`, `## Always Write the Test
-  First`, …); every other heading in the repo is sentence case, so this diverges
-  from convention. Decide keep-vs-revert — behaviour-affecting either way, so the
-  validation run must clear it before it is committed.
+The motivation earned its place in [the recurrence
+lesson](docs/lessons/20260712-1855-write-the-failing-test-before-the-production-code-RECURRED/lesson.md),
+where adding it took the wording from a pooled 190/200 full-pass to 99/100.
+That was measured on claude-opus-4-8 under CLI 2.1.191; both have since moved.
+The committed wording holds at 100/100 on the current pair, but the skill has
+never been run without the motivation on it — so there is no evidence it is still
+paying for itself.
+
+Run it as an alternating A/B, escalating in waves of ten runs per arm:
+
+1. **arm A, the control** — the committed `xdd-plugin/skills/xdd/SKILL.md`.
+2. **arm B, the candidate** — the same file with all three elements removed.
+
+Ten runs per arm is a screen, not a confirmation. The acceptance bar is under 1
+failure in 100, and a wording that has regressed to the old baseline rate still
+comes through a clean ten about 10% of the time. So a clean wave earns the next
+one, up to **100 runs per arm** — 200 critiques, since each run covers both
+scenarios in `test_red_green_commit.py`. A failure in either arm stops the run
+there: in arm A it marks a contaminated window, in arm B it already answers the
+question.
+
+`compare-wordings.sh` copies a snapshot over the target before each arm's wave and
+restores the original on any exit, so each arm needs a snapshot file. Both are in
+[`spec/experiments/20260802-motivation-ablation/`](spec/experiments/20260802-motivation-ablation),
+where the result is recorded too. Runs accumulate in the artefacts dir, so every
+wave points at the same one:
+
+```
+STOP_ON_A_FAIL=1 bash scripts/compare-wordings.sh .artefacts/<datetime>-motivation-ablation \
+  spec/experiments/20260802-motivation-ablation/SKILL-current.md current \
+  spec/experiments/20260802-motivation-ablation/SKILL-no-motivation.md no-motivation \
+  1 10
+```
+
+`STOP_ON_A_FAIL=1` gates arm A; tally between waves to catch an arm B failure.
+See [COMMANDS.md](COMMANDS.md#compare-two-wordings).
+
+**What each outcome opens.** A regressed arm B means the motivation is still
+earning its place, and separating the three elements — identity, goal,
+consequence — becomes the experiment worth running next. An arm B that stays
+clean to 100 means the motivation may no longer be earning its place on this
+model and CLI.
 
 ## 2. Capture code-change diffs in the run transcript — Edit still to do
 
@@ -71,13 +98,29 @@ earns its place only to remove or avoid duplication, and lands across two commit
 - Work out how to build the scene that recreates the misstep: the opening
   workspace state that tempts an agent into adding several cases at once.
 
-## 4. N× batch gateway — run a scenario Nx and tally (belongs in play)
+## 4. Observed Misstep: Started TDD at the innermost unit
+
+The change was driven from `ClaudeCli` — the deepest collaborator — rather than
+from the failing scenario. Adding its new required parameter meant threading the
+argument up through every caller before anything could go green: eight call sites
+in its own test file, the contract test, a test double's signature, and
+`ClaudeSession`. None of that work was the change; it was the cost of having
+started underneath it.
+
+Worse, the question the change actually turned on — who owns the knowledge that a
+scene keeps its permissions at `.claude/settings.json` — surfaced mid-cascade,
+with the code already half-changed. Working outside-in asks it first: start at the
+scenario that fails, descend one collaborator at a time, and each red is about the
+seam being designed rather than about call sites that no longer bind.
+
+## 5. N× batch gateway — run a scenario Nx and tally (belongs in play)
 
 Guidance experiments (baseline vs a `SKILL.md` change) are measured by running a
-scenario many times and tallying per-run outcomes. Until this lands, an interim
-10× command in [COMMANDS.md](COMMANDS.md) runs the real-agent scenarios at 10-way
-concurrency with no launch stagger; it launches but does not tally, so the signals (did the skill
-load; literal vs formula) are read per run by hand.
+scenario many times and tallying per-run outcomes. The shell scripts in
+[`scripts/`](scripts) get us by: `verify-runs.sh` for single-arm verification,
+`compare-wordings.sh` for an alternating A/B, `tally.sh` to read a run set. They
+launch at full concurrency with no stagger, and a wave count has to be chosen by
+hand against the session usage limit.
 
 Make it a first-class mechanism in **play** — framework work, not a spec helper or
 a shell loop (cf. "Review later: move scene management to play"). Run a named
@@ -86,55 +129,64 @@ Per run, capture the pytest result plus the scenario's signals (skill loaded; th
 production shape). This makes experiments (baseline vs B, gateway variants)
 reproducible rather than one-off.
 
-## 5. Contract-test ClaudeCli's options
+The elimination methodology these encode — paired waves, a control arm, stopping
+on contamination — may warrant an ADR alongside the implementation.
+
+## 6. Contract-test ClaudeCli's options
 
 `ClaudeCli` passes `--permission-mode`, `--session-id`, `--add-dir`, and
 `--plugin-dir` to real claude, but only a bare prompt is contract-tested
 (`play/tests/contract/test_claude_cli.py`). Add one contract test per option,
 verifying it does what we expect against the real CLI, one at a time.
 
-**Deferred — versions / CLI upgrade.** ADR 0016 (trust the workspace) and the
-move to 2.1.195 aren't needed on 2.1.191 — the gate is absent; the trust marking
-becomes necessary only on 2.1.193+.
+## 7. Capture the effort used in the agent transcript
 
-## 6. Pin and record reasoning effort and the context window
+The versions header records the CLI and the model a run used (ADR
+[0017](docs/architecture/decisions/0017-record-cli-version-and-model-in-the-run-transcript.md)),
+but not its **reasoning effort**, which bears on a lesson's provenance (ADR
+[0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md))
+the same way.
+
+Since CLI 2.1.212 the effort a run used is observable: every `assistant` event in
+the session JSONL carries a top-level `"effort"` field, reading `"high"` on the
+pinned model. Read it from there and render it in the versions header beside CLI
+and MODEL. TDD in `play` (`claude_transcriber.py`) — extend the current
+transcriber rather than waiting on the ground-up rewrite in ADR
+[0014](docs/architecture/decisions/0014-separate-claude-jsonl-translation-from-the-transcriber.md).
+
+This records what a run *actually used*, which is a separate matter from choosing
+it deliberately — that is §8.
+
+## 8. Pin reasoning effort, and record the context window
 
 ADR [0019](docs/architecture/decisions/0019-pin-and-record-reasoning-effort-and-context-window.md)
-(Proposed): a run transcript records the CLI version and model (ADR
-[0017](docs/architecture/decisions/0017-record-cli-version-and-model-in-the-run-transcript.md)),
-but not the **reasoning effort** or the **context window** a run used — both bear
-on a lesson's provenance (ADR
-[0015](docs/architecture/decisions/0015-capture-xdd-skill-missteps-as-lessons.md)).
-What was learned while capturing the first lesson:
+(Proposed) was written when neither value could be read back from a run. That no
+longer holds for effort, so the ADR needs revising before it is acted on. What a
+run on 2.1.220 shows:
 
-- The harness runs resolve to `claude-opus-4-8[1m]` — the **1M context** variant
-  (Opus 4.8 maps to 1M by default). The header's source, `message.model`, records
-  the API id `claude-opus-4-8`, dropping the `[1m]`; the `[1m]` form is visible
-  only in the `system/init` event's `model`.
-- The harness passes no `--effort`, so runs use the CLI **default (high** for
-  Opus 4.8**)**. Effort is absent from both the session JSONL and the
-  `system/init` event, so it can only be recorded as the value the harness sets.
+- **Effort is readable back** — §7 covers capturing it. What is left here is
+  *setting* it, rather than taking whatever the CLI defaults to.
+- **The context window is not.** Both the session JSONL and the `system/init`
+  event report a bare `claude-opus-5`, with no `[1m]` variant.
+- The harness passes no `--effort`, so runs take the CLI default — measured as
+  `high` on the pinned model.
 
 Two pieces of work, each TDD in `play/`:
 
 1. **Pin effort.** Add a `--effort` flag to the harness's `claude -p` invocation
-   (`play/src/claude_cli.py`), pinned to **high** — the current Opus 4.8 default,
-   so this locks in the behaviour the first lessons were captured under rather
-   than changing it. Effort levels are **model-dependent** (Opus 4.8/4.7:
-   `low|medium|high|xhigh|max`; Opus 4.6, Sonnet 4.6: `low|medium|high|max`;
-   Haiku 4.5: no documented effort support), so the flag must be **gated on the
-   resolved model** — never pass `--effort` to a model that does not support it
-   (it would fail the run). `ClaudeCli` therefore needs to know which model it is
-   invoking, or which models support the chosen level.
-2. **Record effort + context.** Extend the versions header (ADR 0017) so the
-   transcript records the effort the harness set and the resolved context window
-   (the `[1m]` form from the `system/init` event, not the per-message
-   `message.model`).
+   (`play/src/claude_cli.py`), set to `high` so the flag records behaviour rather
+   than changes it.
+
+   Levels are **model-dependent**, so the flag must be **gated on the resolved
+   model** — passing `--effort` to a model that does not support it fails the run.
+   `ClaudeCli` therefore needs to know which model it is invoking.
+2. **Record the context window.** Extend the versions header (ADR 0017) with the
+   window the harness asked for, since no run reports it back.
 
 Then backfill the captured lessons' metadata from the recorded values rather than
 from this investigation.
 
-## 7. Simplify the dev commands with a build tool
+## 9. Simplify the dev commands with a build tool
 
 The "before any commit" gate — test → lint → mutation — and the levels of test and
 check (unit, contract, integration, the spec configs, focused/full mutation, the full
@@ -229,7 +281,7 @@ survivor means *subtract the speculative code* (or document an accepted-mutation
    `baseline` needs shell `&`/`wait` in that one recipe, or we accept serial.
 3. Fast-auto (`pre-commit` hook) + manual full `build`, keep the scoped rules, or a blend.
 
-## 8. Improvement plan working approach
+## 10. Improvement plan working approach
 
 One change at a time: apply it, run the test(s) the change's scope calls
 for, then propose a commit — behavioural and structural changes kept in
@@ -312,7 +364,7 @@ Review the file through each lens below in turn and in the order below:
 - Public methods take keyword-only args (`*` separator) (inferred)
 - Import grouping: stdlib / third-party / first-party (inferred, ruff-enforced)
 
-## 9. Improvement plan
+## 11. Improvement plan
 
 We are working through each file in turn, bringing each up to the reference
 standard set by `critic.py` / `TestCritic` — matching the conventions inferred
@@ -365,6 +417,7 @@ don't bury NEXT.md.
 - [ ] `failure_message.py` (and `tests/test_failure_message.py`)
 - [ ] `raise_when.py` (and `tests/test_raise_when.py`)
 - [ ] `scorecard_json_extraction.py` (and `tests/test_scorecard_json_extraction.py`)
+- [ ] `archiver.py` (and `tests/test_archiver.py`)
 - [ ] `inspector.py` — No test yet
 
 A cross-cutting improvement surfaced by the critic extraction — a
@@ -374,7 +427,6 @@ A cross-cutting improvement surfaced by the critic extraction — a
 
 ### `spec/`
 
-- [ ] `archiver.py` (and `tests/test_archiver.py`)
 - [ ] `conftest.py`
 
 ### `Auditor.evaluate` should derive per-row status, not hard-code PASS
@@ -420,8 +472,26 @@ A candidate convention to start from — every public entry point to the
 
 This may become the standard for all files.
 
+## 12. Heading case — a repo-wide convention question
+
+`SKILL.md` uses title-case headings; every other heading in the repo is sentence
+case. Neither [`document-style.md`](docs/document-style.md) nor
+[`writing-style.md`](docs/writing-style.md) states a rule, so there is a
+convention to adopt rather than one being broken.
+
+`SKILL.md` is agent-facing and its wording is measured, so changing it needs a
+fresh measurement. Every other doc is human-facing, where case is unmeasured.
+
+- Document that split in [`document-style.md`](docs/document-style.md).
+- Harmonise the repo to one case — a wide diff, no evidence either way.
+- Change `SKILL.md` to sentence case, and re-measure.
+
 ## Future options
 
+- **Chunk long runs under the session usage limit**: a calibrated wave count,
+  optionally stopping on a limit signal (`system/api_retry` surfaced from
+  `ClaudeCli`), since there is no scriptable query for remaining budget. Today the
+  count is chosen by hand.
 - **Critic saves results to a file**: instruct the critic prompt to write
   its scorecard to a specific file (e.g. `scorecard.json`) rather than
   returning JSON in the response text. The file would contain only JSON,
@@ -435,11 +505,12 @@ This may become the standard for all files.
 
 ## Known constraints
 
-- Transient artefacts (`.venv/`, `.pytest_cache/`, `__pycache__/`) will
-  be visible to the real agent in the workspace — decide whether to
-  exclude or clean them before the agent runs.
-- The agent's cwd must be the workspace root for `uv run pytest` to
-  resolve correctly.
+- **The opening scene carries transient dirs into the agent's workspace.**
+  `_set_opening_scene_for` filters only `transcript.md`, so an untracked
+  `__pycache__` in a scene dir is copied too — the agent's starting state differs
+  between machines. `uv run pytest` then adds `.venv/` and `.pytest_cache/`.
+  `Archiver` filters all three, so artefacts show none of it. Should the scene
+  copy filter them too?
 
 ## Enforcing working-practices via hooks
 
@@ -480,10 +551,20 @@ config in the checked-in `.claude/settings.json`.
 
 The hooks — built, and candidates:
 
-- **SessionStart — inject working-practices (built).** Prints the literal
-  text of `docs/working-practices.md` into context via
+- **SessionStart — inject the docs to be applied literally (built).**
+  `session_start_inject_docs.sh` prints the literal text of
+  `docs/working-practices.md` and `docs/commit-style.md` into context via
   `hookSpecificOutput.additionalContext` — the actual words, not a pointer,
-  because the failure mode was paraphrase, not ignorance. Cannot block.
+  because the failure mode was paraphrase, not ignorance. Cannot block. Each
+  doc in the list carries its own preamble saying how to apply it.
+
+  Commit style joined the list after a second read-but-not-applied miss: a
+  proposal written to an inferred style with the doc unopened. Session start is
+  the only trigger that reaches every commit message, because a proposal is
+  text rather than a tool call — a prompt hook covers only the messages a
+  person asks for, a green hook only those a test precedes, and by `git commit`
+  the message is already written. Under propose-on-green, most proposals answer
+  no prompt at all.
 - **PostToolUse after pytest — green nudge (built, proven this session).**
   On a pytest green, injects a reminder to run the focused mutation check
   (see [Mutation testing](COMMANDS.md#mutation-testing)) on the in-flight

@@ -3,17 +3,19 @@ name: xdd
 description: Use for ALL test-driven development work — before writing a failing test, making a failing test pass, or refactoring. Invoke before adding or changing any production or test code.
 ---
 
-# Model Corrections
+# Your Purpose
+You are a test-driven development (TDD) expert.
 
-Your model has some misunderstandings of TDD, which you should override with the following:  
+Your goal is to help developers write high-quality, maintainable code by demonstrating an exemplar approach to TDD.
 
 ## Always Write the Test First
 
-After the test is written, then change the production code so it [fails for the right reason](#failing-for-the-right-reason)
+1. Then run the test.
 
 ## Failing for the Right Reason
 
-Where values are being compared in the assertion, the returned value must be of the same type.
+A test fails for the right reason when:
+- Where values are being compared in the assertion, the returned value must be of the same type.
 
 ## Making a Test Pass
 

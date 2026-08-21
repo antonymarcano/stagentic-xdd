@@ -42,9 +42,18 @@ This plugin is being used as the test-subject to help drive out a framework for 
 BDD/TDD to AI skills; that framework is grown in-repo (`play/` and `stagentic-test/`) and
 will later be extracted into separate repositories.
 
+### Tested with
+
+| | |
+|---|---|
+| Claude Code CLI | 2.1.220 |
+| Model | `claude-opus-5` |
+
+Test results: [`docs/migrations/claude-opus-4-8-to-opus-5/`](docs/migrations/claude-opus-4-8-to-opus-5/README.md).
+
 ## Prerequisites
 
-This project requires Claude Code CLI **2.1.191**. Auto-updates are disabled by `.claude/settings.json` — do not run `claude update` without first validating the suite against the candidate version.
+This project requires Claude Code CLI **2.1.220**. Auto-updates are disabled by `.claude/settings.json` — do not run `claude update` without first validating the suite against the candidate version.
 
 Check your current version:
 
@@ -55,13 +64,13 @@ claude --version
 If you already have Claude Code installed, switch to the required version:
 
 ```
-claude install 2.1.191
+claude install 2.1.220
 ```
 
 If you are installing Claude Code for the first time, install the required version directly via npm:
 
 ```
-npm install -g @anthropic-ai/claude-code@2.1.191
+npm install -g @anthropic-ai/claude-code@2.1.220
 ```
 
 ## Development

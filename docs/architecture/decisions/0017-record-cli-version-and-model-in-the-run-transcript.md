@@ -14,7 +14,7 @@ agent-directive: |
 
 A scenario run produces durable artefacts — the agent's `transcript.md` and the critic's `critique.md` (both built by `ClaudeTranscriber`). They record *what the agent and critic did*, but not *which `claude` CLI version and model produced them*.
 
-That gap is expensive when a run regresses. A scenario that had been passing began failing: the agent could no longer run its test. Isolating the cause meant re-running the scenario under candidate CLI versions and comparing behaviour — empirical bisection — before the culprit surfaced: a workspace-trust behaviour change between CLI versions (ADR [0016](0016-trust-the-agent-workspace-for-headless-runs.md)). The investigation was only necessary because the evidence didn't say which version each run used; the deciding variable was invisible in the artefacts.
+That gap is expensive when a run regresses. A scenario that had been passing began failing: the agent could no longer run its test. Isolating the cause meant re-running the scenario under candidate CLI versions and comparing behaviour — empirical bisection — before the culprit surfaced: a workspace-trust behaviour change between CLI versions (ADR [0016](0016-hand-the-agent-its-permissions-as-a-launch-argument.md)). The investigation was only necessary because the evidence didn't say which version each run used; the deciding variable was invisible in the artefacts.
 
 Two existing decisions make this gap sharper:
 

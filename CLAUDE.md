@@ -28,10 +28,13 @@ resource first; the line is a pointer, not a substitute for it.
   [`docs/commit-style.md`](docs/commit-style.md) first.
 - When editing an in-repo doc (README, ADR, CLAUDE.md): read
   [`docs/document-style.md`](docs/document-style.md) first.
+- When writing a scenario, or otherwise using the `play` framework: read
+  [`play/README.md`](play/README.md) first.
 - When touching `play/tests/`: read
   [`test-conventions.md`](docs/architecture/conventions/test-conventions.md) first.
 - When touching `play/src/`: read
-  [`src-conventions.md`](docs/architecture/conventions/src-conventions.md) first.
+  [`src-conventions.md`](docs/architecture/conventions/src-conventions.md) first, and
+  [`play/HOW_IT_WORKS.md`](play/HOW_IT_WORKS.md) for how the pieces fit together.
 - When touching `spec/`: read
   [`spec-conventions.md`](docs/architecture/conventions/spec-conventions.md) first.
 - When a real-agent run reveals a misstep: read
@@ -70,6 +73,10 @@ The approach is explained in [ADR 0001](docs/architecture/decisions/0001-start-w
   numbered file; a decision may add a companion folder named after its slug
   (`NNNN-slug/`) for supporting evidence. Start from [`TEMPLATE.md`](docs/architecture/decisions/TEMPLATE.md).
 - [`docs/assets/`](docs/assets/) — diagrams referenced from [`README.md`](README.md).
+- [`docs/migrations/`](docs/migrations/) — one folder per model or CLI move
+  (`<from>-to-<to>/`), holding the experiments that re-established the skill's
+  wording on the new pair: each experiment's design, its result, and the
+  `SKILL.md` snapshots it measured.
 - `.claude/settings.json` — checked-in Claude Code config: shared
   permissions, pinned model env vars ([ADR 0003](docs/architecture/decisions/0003-pin-model-versions.md)), and
   `DISABLE_AUTOUPDATER` ([ADR 0002](docs/architecture/decisions/0002-pin-claude-code-cli-version.md)).

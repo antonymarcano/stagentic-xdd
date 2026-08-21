@@ -82,44 +82,78 @@ uv run --directory spec pytest tests --agent=real
 uv run --directory spec pytest tests --agent=real --.artefacts-dir .artefacts
 ```
 
-### Real-agent recurrence batch (interim)
+### Repeated real-agent runs (interim)
 
-Two helper scripts in [`scripts/`](scripts) run a scenario N× against the real
-agent and tally the outcomes — interim tooling for measuring how often a lesson's
-misstep recurs.
+A scenario judged by the critic passes or fails probabilistically, so one run
+establishes nothing. The scripts in [`scripts/`](scripts) run a scenario many times
+and tally the outcomes. Interim tooling — the framework version is NEXT.md §4.
 
-**Run** — N parallel real-agent runs of one scenario, artefacts archived under
-`spec/.artefacts`. Invoke it from the **repo root with the relative path** — that
-matches the permission allowlist (`Bash(bash scripts/run-recurrence-batch.sh*)`) and
-runs without a prompt; an absolute path does not match and will prompt:
+Invoke every one from the **repo root with the relative path**. That matches the
+permission allowlist (e.g. `Bash(bash scripts/verify-runs.sh*)`) and runs without a
+prompt; an absolute path does not match and will prompt.
 
-```
-bash scripts/run-recurrence-batch.sh [pytest-node] [count] [artefacts-dir]
-```
+They share two conventions:
 
-Defaults: the write-order scenario
-(`tests/test_red_green_commit.py::TestRedGreenCommit::test_write_a_failing_test`),
-`count=10`, and `artefacts-dir=.artefacts`. Pass the whole file
-(`tests/test_red_green_commit.py`) as the pytest-node to run every scenario in it on
-each launch. Keep batches separate by naming a subfolder per batch at run time —
-`.artefacts/<batch-name>` — rather than adjacent `.artefacts-*` dirs; all artefacts
-stay under `.artefacts`. `artefacts-dir` is relative to `spec/`, so
-`.artefacts/<batch-name>` lands at `spec/.artefacts/<batch-name>`. Launches fire
-simultaneously — no stagger.
+- `artefacts-dir` passed to a **runner** is relative to `spec/`, so
+  `.artefacts/<name>` lands at `spec/.artefacts/<name>`. Passed to `tally.sh` it is
+  relative to the **repo root**, so the same batch is `spec/.artefacts/<name>`.
+- Runs **accumulate** in a dir. Name a fresh subfolder per batch rather than
+  creating adjacent `.artefacts-*` dirs — everything stays under `.artefacts`.
 
-**Tally** — count the runs in an artefacts dir and how many failed a named critic
-characteristic, listing the failing artefact folders. Invoke it the same way (repo
-root, relative path):
+#### Verify one wording at scale
+
+Runs the live working tree N times, tallying after each batch. Use
+`--stop-on-fail` to gate (halt at the first failing batch); omit it to measure a
+rate over all batches.
 
 ```
-bash scripts/tally-recurrence-batch.sh [characteristic] [artefacts-dir]
+bash scripts/verify-runs.sh [--stop-on-fail] <artefacts-dir> [batches] [runs] [pytest-node]
 ```
 
-Defaults: the write-order characteristic and `spec/.artefacts`. Note `artefacts-dir`
-here is relative to the **repo root** (not `spec/`), so pass the full path — e.g.
-`spec/.artefacts/<batch-name>` — to tally a batch the run step wrote to
-`.artefacts/<batch-name>`. Tallies every run currently in the artefacts dir
-(cumulative across batches — clear it between batches for a per-batch count).
+Defaults: `batches=10`, `runs=10`, and the whole red-green-commit file
+(`tests/test_red_green_commit.py`) — so each run covers every scenario in it.
+Exits 0 when every run is clean, 1 when a run failed, 2 when there was nothing to
+evaluate.
+
+#### Compare two wordings
+
+Alternates arm A and arm B wave by wave, swapping the target file before each
+arm's batch and restoring it on any exit. Alternating cancels the load/latency
+drift that would otherwise land entirely on whichever arm ran second.
+
+```
+bash scripts/compare-wordings.sh <artefacts-dir> <fileA> <labelA> <fileB> <labelB> [waves] [runs]
+```
+
+Set `STOP_ON_A_FAIL=1` when arm A is a known-clean control, so a failure in it
+stops the run as a contaminated window; leave it unset when arm A is a baseline
+expected to fail sometimes. `NODE` and `TARGET` override the scenario and the file
+being swapped (default the xdd `SKILL.md`).
+
+#### One batch, or one tally
+
+The primitive each runner is built from, and the reader:
+
+```
+bash scripts/run-batch.sh [pytest-node] [count] [artefacts-dir]
+bash scripts/tally.sh [characteristic] [artefacts-dir]
+```
+
+`tally.sh` reports full-pass, a per-characteristic failure breakdown, skill-load
+checked two independent ways, and the count for one named characteristic
+(defaulting to the write-order one). It tallies every run currently in the dir —
+cumulative across batches.
+
+#### Significance
+
+Whether two measured rates differ by more than chance:
+
+```
+bash scripts/fisher.sh <a> <b> <c> <d>
+```
+
+For the 2x2 table `[[a, b], [c, d]]` — e.g. `a`=arm-A fails, `b`=arm-A passes,
+`c`=arm-B fails, `d`=arm-B passes.
 
 **When a batch deviates from the established rate**, check
 [status.claude.com](https://status.claude.com/) for an incident (degraded
@@ -143,7 +177,7 @@ Keep separate runs apart with a **subfolder per batch under `.artefacts`, named
 at run time**: `--.artefacts-dir .artefacts/<batch-name>` (e.g.
 `.artefacts/experiment/<wording>`). Everything stays under `.artefacts`; do
 **not** create adjacent `.artefacts-*` sibling directories. Point
-`scripts/tally-recurrence-batch.sh` at a subfolder to tally that batch, or at a
+`scripts/tally.sh` at a subfolder to tally that batch, or at a
 parent folder to tally every batch beneath it cumulatively.
 
 ## Mutation testing
